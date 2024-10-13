@@ -1,6 +1,7 @@
 import UIKit
 import SwiftUI
 import ComposeApp
+import NaverSDKLibrary
 
 struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {

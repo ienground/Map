@@ -83,6 +83,7 @@ cupertino-icons-extended = { group = "io.github.alexzhirkevich", name = "cuperti
 # android only
 compose-permission = { group = "com.google.accompanist", name = "accompanist-permissions", version = "0.34.0"}
 naver-maps = { group = "com.naver.maps", name = "map-sdk", version.ref = "naver-maps" }
+naver-maps-compose = { group = "io.github.fornewid", name = "naver-map-compose", version = "1.5.7"}
 
 [plugins]
 devtoolsKsp = { id = "com.google.devtools.ksp", version.ref = "ksp"}

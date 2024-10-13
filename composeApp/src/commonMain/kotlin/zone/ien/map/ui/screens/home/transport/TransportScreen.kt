@@ -1,5 +1,6 @@
 package zone.ien.map.ui.screens.home.transport
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
@@ -12,6 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import zone.ien.map.ui.AppViewModelProvider
 import zone.ien.map.ui.navigation.NavigationDestination
 import zone.ien.map.ui.screens.home.HomeScreenBody
+import zone.ien.map.utils.maps.MapScreen
 
 object TransportDestination: NavigationDestination {
     override val route: String = "transport"
@@ -42,5 +44,7 @@ fun TransportScreen(
 fun TransportScreenBody(
     modifier: Modifier = Modifier
 ) {
-
+    MapScreen(
+        modifier = modifier.fillMaxSize()
+    )
 }

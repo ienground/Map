@@ -43,6 +43,7 @@ kotlin {
 
             implementation(libs.compose.permission)
             implementation(libs.naver.maps)
+            implementation(libs.naver.maps.compose)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
