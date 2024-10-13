@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--서비스 이름-->
+    <string name="app_name_release">Calarm</string>
+    <string name="directions">길찾기</string>
+    <string name="profile">프로필</string>
+
+    <!--Permissions-->
+    <string name="permission_title">Permission to use application</string>
+    <string name="access_location">Location access</string>
+    <string name="access_location_desc">Access location when calendar alarm is created.</string>
+    <string name="allowed">Permission allowed</string>
+    <string name="declined_desc">Please grant permission directly in settings.</string>
+    <string name="permission_error">Please grant all permissions.</string>
+    <string name="start_navigate">Start</string>
+
+    <!--Time Format for Formatting-->
+    <string name="time_format_before">%1$s before</string>
+    <string name="time_format_hour">%1$d hours</string>
+    <string name="time_format_minute">%1$d minutes</string>
+    <string name="time_format_second">%1$d seconds</string>
+    <string name="time_format_1hour">1 hour</string>
+    <string name="time_format_1minute">1 minute</string>
+    <string name="time_format_1second">1 second</string>
+    <string name="time_format_hour_short">%1$d hrs</string>
+    <string name="time_format_minute_short">%1$d mins</string>
+    <string name="time_format_second_short">%1$ds</string>
+    <string name="time_format_1hour_short">1 hr</string>
+    <string name="time_format_1minute_short">1 min</string>
+    <string name="time_format_1second_short">1s</string>
+
+    <!--Time Format for SimpleDateFormat -->
+    <string name="date_time_format">EEEE, MMM d yyyy, h:mm AA</string>
+    <string name="date_format">EEEE, MMM d yyyy</string>
+    <string name="date_format_no_year">EEEE, MMMM d</string>
+    <string name="alarm_content_format">EEE h:mm AA</string>
+    <string name="apm_time_format">h:mm AA</string>
+    <string name="time_oclock_format">h</string>
+    <string name="time_oclock_apm_format">h aa</string>
+    <string name="time_oclock_str">%1$s o\'clock</string>
+
+    <!--Delete Dialog-->
+    <string name="delete">Delete</string>
+    <string name="delete_title">Delete?</string>
+    <string name="delete_content">Are you sure to delete?</string>
+    <string name="cannot_be_undone">This action cannot be undone.</string>
+
+    <!--Save Dialog-->
+    <string name="ask_to_save">Save?</string>
+    <string name="ask_to_save_message">Unsaved changes will be lost.</string>
+    <string name="not_save">Not save</string>
+
+    <!--getRepeatLabel-->
+    <string name="repeat">Repeat</string>
+    <string name="sun">Sun</string>
+    <string name="mon">Mon</string>
+    <string name="tue">Tue</string>
+    <string name="wed">Wed</string>
+    <string name="thu">Thu</string>
+    <string name="fri">Fri</string>
+    <string name="sat">Sat</string>
+    <string name="sunday">Sunday</string>
+    <string name="monday">Monday</string>
+    <string name="tuesday">Tuesday</string>
+    <string name="wednesday">Wednesday</string>
+    <string name="thursday">Thursday</string>
+    <string name="friday">Friday</string>
+    <string name="saturday">Saturday</string>
+    <string name="today">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="weekend">Weekend</string>
+    <string name="weekday">Weekday</string>
+    <string name="everyday">Everyday</string>
+
+    <!--Time (Picker) String-->
+    <string name="date_picker_title">Select date</string>
+    <string name="time_picker_title">Select time</string>
+    <string name="hour">h</string>
+    <string name="minute">m</string>
+    <string name="second">s</string>
+
+    <!--Common String Value-->
+    <string name="detail_settings">Detail settings</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="press_back_to_exit">Press the back button again to exit.</string>
+    <string name="save">Save</string>
+    <string name="use_once">Use once</string>
+    <string name="close">Close</string>
+    <string name="max_message">cannot create more than %1$d</string>
+    <string name="max_message_free">cannot create more than %1$d in free version</string>
+    <string name="back">Back</string>
+    <string name="more_options">More options</string>
+    <string name="tooltip_description">tooltip</string>
+    <string name="tooltip_label">show tooltip</string>
+
+    <!--Detail Screen-->
+    <string name="edit">Edit</string>
+    <string name="label">Label</string>
+    <string name="no_label">No label</string>
+    <string name="schedule">Schedule</string>
+    <string name="schedule_pro_msg">Scheduling (Pro)</string>
+    <string name="scheduled">Scheduled</string>
+    <string name="not_scheduled">Not scheduled</string>
+    <string name="at_least_one_item">At least one item</string>
+    <string name="alarm_ring">Set alarm ring</string>
+    <string name="vibrate">Vibrate</string>
+
+    <!--Notification-->
+    <string name="calarm_alarm">Calarm Alarm</string>
+    <string name="calarm_calendar">Calarm Calendar Alarm</string>
+
+    <!--Settings Category-->
+    <string name="settings_general">General</string>
+    <string name="alarm_settings">Alarm settings</string>
+    <string name="calendar_alarm_settings">Calendar alarm settings</string>
+    <string name="timer_settings">Timer Settings</string>
+    <string name="cycle_timer_settings">Cycling Timer Settings</string>
+    <string name="stopwatch_settings">Stopwatch Settings</string>
+    <string name="info_and_ask"><![CDATA[Info & Ask]]></string>
+    <string name="dev_mode">Developer mode</string>
+    <string name="select_the_menu_settings">Select the menu</string>
+
+    <!--Sound Selection Dialog-->
+    <string name="default_ring">Default ring</string>
+    <string name="default_timer_expired">Timer expired</string>
+    <string name="no_bells_set">No bells set</string>
+
+    <!--General Settings-->
+    <string name="use_dynamic_colors">Use dynamic colors</string>
+    <string name="use_dynamic_colors_sum_off">Apply the default color throughout the app.</string>
+    <string name="use_dynamic_colors_sum_on">Apply dynamic colors throughout the app.</string>
+    <string name="home_address">Home address</string>
+    <string name="set_home_location">Set home location</string>
+    <string name="getting_address">Getting address..</string>
+    <string name="no_address_found">No address found</string>
+    <string name="cannot_get_address">Cannot get address</string>
+    <string name="move_to_current_location">Move to current location</string>
+    <string name="alarm_volume">Alarm volume</string>
+
+    <!--Alarm Settings-->
+    <string name="alarm_snooze_duration">Alarm snooze duration</string>
+    <string name="alarm_auto_dismiss_duration">Alarm auto dismiss duration</string>
+    <string name="sub_alarm_to_create">Sub alarm to create</string>
+    <string name="default_alarm_sound">Default alarm sound</string>
+    <string name="set_alarm_swipe_reverse">Reverse alarm screen swipe direction</string>
+    <string name="set_alarm_swipe_reverse_sum_on">Alarm off on the left, snooze on the right</string>
+    <string name="set_alarm_swipe_reverse_sum_off">Snooze on the left, alarm off on the right</string>
+
+    <!--Calendar Alarm Settings-->
+    <string name="calendar_alarm_auto_dismiss_duration">Calendar alarm auto dismiss duration</string>
+    <string name="calendar_alarm_create_option">Calendar alarm create option</string>
+    <string name="first_event">Only first event</string>
+    <string name="fixed_time_event">Events before time</string>
+    <string name="all_events">Every event</string>
+    <string name="set_fixed_time">Set time</string>
+    <string name="default_calendar_alarm_sound">Default calendar alarm sound</string>
+    <string name="time_to_go_out">Time to get ready to go out</string>
+    <string name="calendar_source_of_calendar_alarm">Calendar source of Calendar alarm</string>
+    <string name="select_calendar">Select calendar..</string>
+    <string name="my_schedule">My Schedule</string>
+
+    <!--Timer Settings-->
+    <string name="default_timer_sound">Default timer sound</string>
+    <string name="default_sub_timer_sound">Default sub timer sound</string>
+
+    <!--Cycling Timer Settings-->
+    <string name="default_cycle_timer_sound">Default cycling timer sound</string>
+
+    <!--Stopwatch Settings-->
+    <string name="title_no_show_reset_dialog">Do not show reset dialog</string>
+    <string name="sum_on_no_show_reset_dialog">Never shows reset dialog again.</string>
+    <string name="sum_off_no_show_reset_dialog">Shows reset dialog.</string>
+    <string name="target_laps">Target lapses</string>
+    <string name="laps">Lapses</string>
+
+    <!--Info Settings-->
+    <string name="calarm_version">Calarm Version</string>
+    <string name="dev_ienlab">Designed, Developed By ienlab\nInstagram : @ienlab</string>
+    <string name="update_log">Update log</string>
+    <string name="update_log_desc">Check new features from this version.</string>
+    <string name="ask_to_dev">Ask to Developer</string>
+    <string name="ask_to_dev_desc">Please send us bugs, questions, or your backup data in case of data aggregation errors!</string>
+    <string name="ask">Ask</string>
+    <string name="email_text">Calarm User Comment</string>
+    <string name="open_source_license">Open Source License</string>
+    <string name="open_source_license_desc">Licenses of Open Sources Used in App</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_policy_desc">Check the privacy policy.</string>
+
+    <!--Deskclock Settings-->
+    <string name="force_black_background">Force black background</string>
+    <string name="force_black_background_sum_on">Forces the background of the Deskclock to be black.</string>
+    <string name="force_black_background_sum_off">Applies the Deskclock\'s background to its original color.</string>
+    <string name="no_items">No items</string>
+    <string name="start">Start</string>
+    <string name="hidden_noti_channels">Hidden notification channels</string>
+    <string name="one_channel_hidden">1 channel hidden</string>
+    <string name="multi_channel_hidden">%1$d channels hidden</string>
+    <string name="no_channel_hidden">No channels hidden</string>
+
+    <!--Dev mode -->
+    <string name="dev_mode_enabled">Developer mode enabled</string>
+
+    <!--Firebase Cloud Messaging-->
+    <string name="push_notification">Push notification</string>
+
+    <!--Widget-->
+    <string name="analog_clock">Analog Clock</string>
+
+    <!--Sample -->
+    <string name="sample_calendar_alarm_address">Google Korea, 152 Teheran-ro, Gangnam-gu, Seoul, South Korea</string>
+    <string name="sample_calendar_alarm_label">Company Meeting</string>
+    <string name="sample_calendar_alarm_label2">Drama time</string>
+    <string name="sample_calendar_alarm_label3">Family Meeting</string>
+    <string name="sample_calarm_color" translatable="false">#FF4081</string>
+    <string name="sample_calarm_account_name" translatable="false">my@ien.zone</string>
+    <string name="sample_calarm_account_type" translatable="false">com.google</string>
+    <string name="sample_calarm_display_name" translatable="false">my@ien.zone</string>
+    <string name="sample_calarm_color2" translatable="false">#7C4DFF</string>
+
+    <!-- UNUSED Beta Channel -->
+    <string name="submit_beta_opinion">Submit Beta Opinion</string>
+    <string name="beta_submit_channel">Beta Submit Channel\n* Required</string>
+    <string name="q1_alarm_good">What\'s good about alarm? *</string>
+    <string name="q2_alarm_bad">What\'s lacking in alarm? *</string>
+    <string name="q3_calendar_alarm_good">What\'s good about calendar alarm? *</string>
+    <string name="q4_calendar_alarm_bad">What\'s lacking in calendar alarm? *</string>
+    <string name="q5_timer_good">What\'s good about timer? *</string>
+    <string name="q6_timer_bad">What\'s lacking in timer? *</string>
+    <string name="q7_stopwatch_good">What\'s good about stopwatch? *</string>
+    <string name="q8_stopwatch_bad">What\'s lacking in stopwatch? *</string>
+    <string name="q9_deskclock_good">What\'s good about deskclock? *</string>
+    <string name="q10_deskclock_bad">What\'s lacking in deskclock? *</string>
+    <string name="q11_etc">What would you like to say to the developer?</string>
+    <string name="submit">Submit</string>
+    <string name="email">E-mail *</string>
+    <string name="fill_out">Fill out this blank</string>
+    <string name="subnission_success">Submission Success</string>
+    <string name="subnission_fail">Submission Fail. Check the internet.</string>
+</resources>
