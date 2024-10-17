@@ -11,6 +11,7 @@ pluginManagement {
             }
         }
         mavenCentral()
+        maven("https://jitpack.io")
         maven("https://repository.map.naver.com/archive/maven")
         gradlePluginPortal()
     }
@@ -26,6 +27,7 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven("https://jitpack.io")
         maven("https://repository.map.naver.com/archive/maven")
     }
 }

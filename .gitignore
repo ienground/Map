@@ -18,3 +18,4 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 /composeApp/src/androidMain/res/values/keys.xml
 /iosApp/Configuration/
+/composeApp/src/commonMain/kotlin/zone/ien/map/constant/ApiKey.kt

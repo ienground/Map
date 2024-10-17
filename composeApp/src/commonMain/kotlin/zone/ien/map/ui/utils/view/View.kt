@@ -216,3 +216,8 @@ fun AppbarTitle(
         }
     )
 }
+
+@Composable
+fun AdaptiveSearchBar(modifier: Modifier = Modifier) {
+
+}

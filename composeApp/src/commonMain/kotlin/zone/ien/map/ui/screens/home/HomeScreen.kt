@@ -79,107 +79,13 @@ fun HomeScreenBody(
     windowSize: WindowSizeClass,
     navController: NavHostController
 ) {
-    val badges = remember { mutableStateListOf(0, 0, 0, 0, 0) }
-
-    Row(
+    Box(
         modifier = modifier
     ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-            ) {
-                HomeNavigationGraph(
-                    windowSize = windowSize,
-                    navController = navController,
+        HomeNavigationGraph(
+            windowSize = windowSize,
+            navController = navController,
 //                    onAction = onAction
-                )
-            }
-            AnimatedVisibility(
-                visible = true,
-                enter = expandVertically(tween(700)),
-                exit = shrinkVertically(tween(700))
-            ) {
-                BottomNavigationBar(navController = navController, badges = badges)
-            }
-        }
+        )
     }
-}
-
-val navigationItems = listOf(
-    BottomNavigationItem.Directions,
-    BottomNavigationItem.Profile,
-//    BottomNavigationItem.Timer,
-//    BottomNavigationItem.CycledTimer,
-//    BottomNavigationItem.Stopwatch
-)
-//
-@OptIn(ExperimentalAdaptiveApi::class)
-@Composable
-fun BottomNavigationBar(navController: NavHostController, isPreview: Boolean = false, badges: SnapshotStateList<Int>) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-
-    AnimatedVisibility(
-        visible = navigationItems.any { it.route == currentDestination?.route } || isPreview,
-        enter = expandVertically(animationSpec = tween(700)),
-        exit = shrinkVertically(animationSpec = tween(700))
-    ) {
-        AdaptiveNavigationBar {
-            navigationItems.forEachIndexed { index, item ->
-                NavItem(navItem = item, currentDestination = currentDestination, navController = navController, badges[index])
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalAdaptiveApi::class)
-@Composable
-fun RowScope.NavItem(navItem: BottomNavigationItem, currentDestination: NavDestination?, navController: NavHostController, badge: Int) {
-    AdaptiveNavigationBarItem(
-        selected = currentDestination?.hierarchy?.any { it.route == navItem.route } == true,
-        icon = {
-            BadgedBox(badge = {
-                if (badge != 0) {
-                    Badge(
-                        modifier = Modifier.size(if (badge <= 0) 6.dp else 16.dp)
-                    ) {
-                        if (badge > 0) Text(text = badge.toString(), fontSize = 12.sp)
-                    }
-                }
-            }) {
-                AdaptiveIcon(imageVector = navItem.icon, contentDescription = stringResource(navItem.title))
-            }
-        },
-        label = {
-            AdaptiveText(
-                text = stringResource(navItem.title),
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                modifier = Modifier
-//                .marqueeHorizontalFadingEdges(
-//                    marqueeProvider = { Modifier.basicMarquee(iterations = Int.MAX_VALUE) }
-//                )
-            )
-        },
-        alwaysShowLabel = currentTheme != Theme.Material3,
-        onClick = {
-            if (currentDestination?.route != navItem.route) {
-                navController.navigate(navItem.route) {
-                    popUpTo(TransportDestination.route) {
-                        saveState = true
-                    }
-                }
-            }
-        }
-    )
-}
-
-sealed class BottomNavigationItem(val title: StringResource, val icon: ImageVector, val route: String) {
-    data object Directions: BottomNavigationItem(Res.string.directions, Icons.Rounded.Alarm, TransportDestination.route)
-    data object Profile: BottomNavigationItem(Res.string.profile, Icons.Rounded.Person, ProfileDestination.route)
-//    data object Timer: BottomNavigationItem(Res.string.timer, MyIconPack.HourglassBottom, HomeTimerDestination.route)
-//    data object CycledTimer: BottomNavigationItem(Res.string.cycle_timer, MyIconPack.HourglassRepeat, HomeCycledTimerDestination.route)
-//    data object Stopwatch: BottomNavigationItem(Res.string.stopwatch, Icons.Rounded.Timer, HomeStopwatchDestination.route)
 }

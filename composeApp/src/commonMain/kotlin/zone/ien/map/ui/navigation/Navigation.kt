@@ -83,14 +83,19 @@ fun HomeNavigationGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = TransportDestination.route
+        startDestination = TransportDestination.route,
+        modifier = modifier
     ) {
         composable(route = TransportDestination.route) {
-            TransportScreen()
+            TransportScreen(
+                navigateToProfile = { navController.navigate(ProfileDestination.route) }
+            )
         }
 
         composable(route = ProfileDestination.route) {
-            ProfileScreen()
+            ProfileScreen(
+                navigateBack = { navController.popBackStack() }
+            )
         }
     }
 }

@@ -23,7 +23,7 @@ import zone.ien.map.ui.theme.dynamicCupertinoColorScheme
 import zone.ien.map.ui.theme.dynamicMaterialColorScheme
 import zone.ien.map.ui.theme.getTypography
 
-const val TAG = "MapTAG"
+const val TAG = "LayoveroadTAG"
 
 @OptIn(ExperimentalAdaptiveApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable

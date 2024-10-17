@@ -35,6 +35,12 @@ kotlin {
     }
 
     sourceSets {
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
+        iosTest.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.activity.compose)
@@ -44,6 +50,9 @@ kotlin {
             implementation(libs.compose.permission)
             implementation(libs.naver.maps)
             implementation(libs.naver.maps.compose)
+
+            // ktor
+            implementation(libs.ktor.client.okhttp)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -81,6 +90,9 @@ kotlin {
 
             implementation(libs.kmp.kermit)
             implementation(libs.kolor)
+
+            // ktor
+            implementation(libs.ktor.client.core)
 
             // cupertino
             implementation(libs.cupertino)

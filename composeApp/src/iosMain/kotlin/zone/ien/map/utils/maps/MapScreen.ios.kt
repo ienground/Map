@@ -28,7 +28,12 @@ import zone.ien.map.utils.SwiftUIFactory
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
-actual fun MapScreen(modifier: Modifier) {
+actual fun MapScreen(
+    modifier: Modifier,
+    currentLatLng: Pair<Double, Double>,
+    selectedLatLng: Pair<Double, Double>?
+//    markers: List<Pair<Double, Double>>
+) {
     Dlog.i(TAG, "${SwiftUIFactory.shared}")
     Text("hello map")
     SwiftUIFactory.shared?.let {

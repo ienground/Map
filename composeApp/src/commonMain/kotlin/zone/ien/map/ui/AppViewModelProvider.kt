@@ -5,13 +5,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import zone.ien.map.data.AppContainer
 import zone.ien.map.ui.screens.home.HomeViewModel
 import zone.ien.map.ui.screens.home.profile.ProfileViewModel
 import zone.ien.map.ui.screens.home.transport.TransportViewModel
 import zone.ien.map.ui.screens.permissions.PermissionsViewModel
 
 object AppViewModelProvider: KoinComponent {
-//    private val container: AppContainer by inject()
+    private val container: AppContainer by inject()
 
     val factory = viewModelFactory {
         initializer {
@@ -23,7 +24,10 @@ object AppViewModelProvider: KoinComponent {
         }
 
         initializer {
-            TransportViewModel()
+            TransportViewModel(
+                favoriteRepository = container.favoriteRepository,
+                historyRepository = container.historyRepository
+            )
         }
 
         initializer {
