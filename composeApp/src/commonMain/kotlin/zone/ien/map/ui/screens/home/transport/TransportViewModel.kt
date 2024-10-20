@@ -43,6 +43,7 @@ import zone.ien.map.data.history.HistoryRepository
 import zone.ien.map.datastore.DEFAULT_DATASTORE
 import zone.ien.map.utils.Dlog
 import zone.ien.map.utils.LocationUtils
+import zone.ien.map.utils.measure
 import zone.ien.map.utils.now
 
 class TransportViewModel(
@@ -103,6 +104,7 @@ class TransportViewModel(
                     header("X-Naver-Client-Secret", ApiKey.NAVER_CLIENT_SECRET)
                 }
                 val result = Json.decodeFromString<JsonObject>(response.bodyAsText())["items"]?.jsonArray?.map {
+                    Dlog.d(TAG, "json: ${it}")
                     val jsonObject = it.jsonObject
                     val title = jsonObject["title"]?.jsonPrimitive?.content ?: ""
                     val category = jsonObject["category"]?.jsonPrimitive?.content ?: ""
@@ -112,13 +114,11 @@ class TransportViewModel(
                     val latitude = jsonObject["mapy"]?.jsonPrimitive?.int?.div(10000000.0) ?: 0.0
                     val longitude = jsonObject["mapx"]?.jsonPrimitive?.int?.div(10000000.0) ?: 0.0
 
-                    QueryResult(title = title, category = category, telephone = telephone, address = address, roadAddress = roadAddress, latitude = latitude, longitude = longitude)
+                    QueryResult(title = title, categories = category.split(">"), telephone = telephone, address = address, roadAddress = roadAddress, latitude = latitude, longitude = longitude)
                 }
 
+
                 updateUiState(uiState.item.copy(searchActive = true, queryResults = result ?: listOf()))
-
-
-
             } catch (e: Exception) {
                 Dlog.e(TAG, "error: ${e}")
             }
@@ -126,7 +126,6 @@ class TransportViewModel(
     }
 
     fun requestRoute() {
-
     }
 
     companion object {
@@ -153,8 +152,10 @@ data class TransportDetails(
     val searchActive: Boolean = false,
     val queryResults: List<QueryResult> = listOf(),
     val sheetType: SheetType = SheetType.SEARCH,
+    val isOrdered: Boolean = false,
     val selectedQuery: QueryResult? = null,
 
+    val currentAddress: String = "",
     val currentLatLng: Pair<Double, Double> = Pair(0.0, 0.0),
     val layovers: List<String> = listOf(),
 //    val markers: List<Pair<Double, Double>> = listOf()

@@ -5,10 +5,10 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,34 +17,47 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.sharp.Add
 import androidx.compose.material.icons.sharp.Close
+import androidx.compose.material.icons.sharp.History
+import androidx.compose.material.icons.sharp.Home
 import androidx.compose.material.icons.sharp.LocationOn
 import androidx.compose.material.icons.sharp.Navigation
 import androidx.compose.material.icons.sharp.Person
+import androidx.compose.material.icons.sharp.Place
 import androidx.compose.material.icons.sharp.RemoveCircle
+import androidx.compose.material.icons.sharp.School
 import androidx.compose.material.icons.sharp.Search
-import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material.icons.sharp.Work
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,29 +66,49 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.rememberRichTextState
+import com.mohamedrejeb.richeditor.ui.material3.RichText
 import io.github.alexzhirkevich.cupertino.CupertinoBottomSheetDefaults
-import io.github.alexzhirkevich.cupertino.CupertinoBottomSheetScaffold
-import io.github.alexzhirkevich.cupertino.CupertinoSearchTextField
-import io.github.alexzhirkevich.cupertino.ExperimentalCupertinoApi
 import kotlinx.coroutines.launch
-import zone.ien.map.TAG
+import map.composeapp.generated.resources.Res
+import map.composeapp.generated.resources.long_ago
+import map.composeapp.generated.resources.more
+import map.composeapp.generated.resources.recent
+import map.composeapp.generated.resources.this_month
+import map.composeapp.generated.resources.this_week
+import map.composeapp.generated.resources.this_year
+import map.composeapp.generated.resources.today
+import map.composeapp.generated.resources.yesterday
+import org.jetbrains.compose.resources.stringResource
+import zone.ien.map.data.QueryResult
+import zone.ien.map.data.favorite.Favorite
 import zone.ien.map.ui.AppViewModelProvider
 import zone.ien.map.ui.navigation.NavigationDestination
-import zone.ien.map.ui.screens.home.HomeScreenBody
+import zone.ien.map.ui.utils.view.AdaptiveBackButton
 import zone.ien.map.ui.utils.view.AdaptiveText
-import zone.ien.map.utils.Dlog
+import zone.ien.map.utils.HistoryGroup
+import zone.ien.map.utils.LocationUtils
+import zone.ien.map.utils.diffToString
+import zone.ien.map.utils.groupByTime
 import zone.ien.map.utils.maps.MapScreen
+import zone.ien.map.utils.measure
+import zone.ien.map.utils.safeSubList
 
 object TransportDestination: NavigationDestination {
     override val route: String = "transport"
 }
 
 enum class SheetType {
-    SEARCH, DETAIL, ROUTE
+    SEARCH, DETAIL, ROUTE, HISTORY
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,17 +129,18 @@ fun TransportScreen(
     LaunchedEffect(sheetState.bottomSheetState.currentValue) {
         if (sheetState.bottomSheetState.currentValue == SheetValue.PartiallyExpanded) {
             viewModel.updateUiState(viewModel.uiState.item.copy(searchActive = false))
-        } else if (sheetState.bottomSheetState.currentValue == SheetValue.Expanded) {
-            viewModel.updateUiState(viewModel.uiState.item.copy(searchActive = true))
         }
-        Dlog.d(TAG, "bottom sheet state: ${sheetState.bottomSheetState.currentValue}")
+//        } else if (sheetState.bottomSheetState.currentValue == SheetValue.Expanded) {
+//            viewModel.updateUiState(viewModel.uiState.item.copy(searchActive = true))
+//        }
     }
 
     val sheetHeight = animateDpAsState(
         targetValue = when (viewModel.uiState.item.sheetType) {
-            SheetType.SEARCH -> 500.dp
+            SheetType.SEARCH -> if (viewModel.uiState.item.searchActive) 800.dp else 514.dp
             SheetType.DETAIL -> 100.dp
             SheetType.ROUTE -> 800.dp
+            SheetType.HISTORY -> 800.dp
         },
     )
 
@@ -153,9 +187,20 @@ fun TransportScreen(
                         onRequestRoute = viewModel::requestRoute
                     )
                 }
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = viewModel.uiState.item.sheetType == SheetType.HISTORY,
+                    enter = fadeIn(tween(700)),
+                    exit = fadeOut(tween(700))
+                ) {
+                    HistorySheetContent(
+                        uiState = viewModel.uiState,
+                        onItemValueChanged = viewModel::updateUiState,
+                        historyList = historyUiStateList
+                    )
+                }
             }
         },
-        sheetPeekHeight = 100.dp,
+        sheetPeekHeight = 108.dp,
         sheetDragHandle = {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -207,7 +252,7 @@ fun TransportScreenBody(
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SearchSheetContent(
     modifier: Modifier = Modifier,
@@ -221,7 +266,6 @@ fun SearchSheetContent(
     val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = modifier
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
         DockedSearchBar(
             query = uiState.item.query,
@@ -233,7 +277,6 @@ fun SearchSheetContent(
                 coroutineScope.launch {
                     sheetState.bottomSheetState.expand()
                 }
-                Dlog.d(TAG, "onActiveChange ${it}")
             },
             leadingIcon = {
 
@@ -244,47 +287,276 @@ fun SearchSheetContent(
                     contentDescription = null
                 )
             },
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(items = uiState.item.queryResults, key = { it.title }) {
-                    Text(
-                        text = it.title,
-                        modifier = Modifier.clickable {
-                            Dlog.d(TAG, "moved to ${it.latitude} ${it.longitude} from ${it.title}")
-                            onItemValueChanged(uiState.item.copy(currentLatLng = Pair(it.latitude, it.longitude), selectedQuery = it, sheetType = SheetType.DETAIL))
-                        }
+                itemsIndexed(items = uiState.item.queryResults, key = { _, item -> item.title }) { index, item ->
+                    SearchRow(
+                        uiState = uiState,
+                        query = item,
+                        onClick = { onItemValueChanged(uiState.item.copy(currentLatLng = Pair(item.latitude, item.longitude), selectedQuery = item, sheetType = SheetType.DETAIL)) },
+                        modifier = Modifier
                     )
-                    HorizontalDivider()
+                    if (index != uiState.item.queryResults.size - 1) {
+                        HorizontalDivider()
+                    }
                 }
             }
         }
-        AdaptiveText(
-            text = ".."
+        AnimatedVisibility(
+            visible = !uiState.item.searchActive,
+            enter = fadeIn(tween(700)),
+            exit = fadeOut(tween(700))
+        ) {
+            Column(
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                LazyRow {
+                    item {
+                        FavoriteRow(
+                            uiState = uiState,
+                            item = favoriteList.itemList.firstOrNull { it.type == Favorite.Type.HOME }
+                                ?: FavoriteDetails(type = Favorite.Type.HOME),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                    item {
+                        FavoriteRow(
+                            uiState = uiState,
+                            item = favoriteList.itemList.firstOrNull { it.type == Favorite.Type.OFFICE }
+                                ?: FavoriteDetails(type = Favorite.Type.OFFICE),
+                        )
+                    }
+                    item {
+                        FavoriteRow(
+                            uiState = uiState,
+                            item = favoriteList.itemList.firstOrNull { it.type == Favorite.Type.SCHOOL }
+                                ?: FavoriteDetails(type = Favorite.Type.SCHOOL),
+                        )
+                    }
+                    items(items = favoriteList.itemList.filter { it.type == Favorite.Type.ETC }, key = { it.id }) { item ->
+                        FavoriteRow(
+                            uiState = uiState,
+                            item = item,
+                            modifier = Modifier.animateItemPlacement()
+                        )
+                    }
+                    item { Spacer(modifier = Modifier.width(8.dp)) }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(Res.string.recent),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp)
+                    )
+                    TextButton(
+                        onClick = { onItemValueChanged(uiState.item.copy(sheetType = SheetType.HISTORY)) },
+                        modifier = Modifier
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.more)
+                        )
+                    }
+                }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    itemsIndexed(items = historyList.itemList.safeSubList(0, 3), key = { _, item -> item.id }) { index, item ->
+                        val shape = when (index) {
+                            0 -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                            historyList.itemList.size - 1, 2 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                            else -> RectangleShape
+                        }
+                        HistoryRow(
+                            item = item,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surfaceVariant, shape)
+                        )
+                        if (index != historyList.itemList.size - 1 && index != 2) {
+                            HorizontalDivider()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FavoriteRow(
+    modifier: Modifier = Modifier,
+    uiState: TransportUiState,
+    item: FavoriteDetails,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable {
+
+            }
+            .padding(8.dp)
+    ) {
+        FavoriteIconButton(
+            onClick = {},
+            item = item,
+            contentColor = when (item.type) {
+                Favorite.Type.HOME -> MaterialTheme.colorScheme.onPrimaryContainer
+                Favorite.Type.OFFICE -> MaterialTheme.colorScheme.onSecondaryContainer
+                Favorite.Type.SCHOOL -> MaterialTheme.colorScheme.onTertiaryContainer
+                else -> MaterialTheme.colorScheme.onErrorContainer
+            },
+            containerColor = when (item.type) {
+                Favorite.Type.HOME -> MaterialTheme.colorScheme.primaryContainer
+                Favorite.Type.OFFICE -> MaterialTheme.colorScheme.secondaryContainer
+                Favorite.Type.SCHOOL -> MaterialTheme.colorScheme.tertiaryContainer
+                else -> MaterialTheme.colorScheme.errorContainer
+            },
+            modifier = Modifier.size(64.dp)
+        ) {
+            Icon(
+                imageVector = when (item.type) {
+                    Favorite.Type.HOME -> Icons.Sharp.Home
+                    Favorite.Type.OFFICE -> Icons.Sharp.Work
+                    Favorite.Type.SCHOOL -> Icons.Sharp.School
+                    else -> Icons.Sharp.Place
+                },
+                contentDescription = null,
+            )
+        }
+        Text(
+            text = item.label,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+        Text(
+            text = if (item.id != -1L) LocationUtils.measure(uiState.item.currentLatLng, Pair(item.latitude, item.longitude)).diffToString() else "",
+            fontSize = 10.sp
+        )
+    }
+}
+
+@Composable
+fun FavoriteIconButton(
+    modifier: Modifier = Modifier,
+    item: FavoriteDetails,
+    onClick: () -> Unit,
+    contentColor: Color,
+    containerColor: Color,
+    content: @Composable () -> Unit
+) {
+    Box {
+        AnimatedVisibility(
+            visible = item.id == -1L,
+            enter = fadeIn(tween(700)),
+            exit = fadeOut(tween(700))
+        ) {
+            OutlinedIconButton(
+                onClick = onClick,
+                shape = RoundedCornerShape(16.dp),
+                modifier = modifier,
+                colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = contentColor),
+                content = content
+            )
+        }
+        AnimatedVisibility(
+            visible = item.id != -1L,
+            enter = fadeIn(tween(700)),
+            exit = fadeOut(tween(700))
+        ) {
+            FilledTonalIconButton(
+                onClick = onClick,
+                shape = RoundedCornerShape(16.dp),
+                modifier = modifier,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = containerColor, contentColor = contentColor),
+                content = content
+            )
+        }
+    }
+}
+
+@Composable
+fun HistoryRow(
+    modifier: Modifier = Modifier,
+    item: HistoryDetails,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+            .padding(16.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Sharp.History,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Column {
-            Row {
-                Text("집")
-                Text("회사")
-                Text("학교")
-            }
-            Text("기타 n개")
+            Text(
+                text = item.label,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = item.address,
+                fontSize = 12.sp,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
-        AdaptiveText(
-            text = "Recent"
-        )
-        LazyColumn(
+    }
+}
 
+@OptIn(ExperimentalRichTextApi::class)
+@Composable
+fun SearchRow(
+    modifier: Modifier = Modifier,
+    uiState: TransportUiState,
+    query: QueryResult,
+    onClick: () -> Unit
+) {
+    val richTextState = rememberRichTextState()
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Icon(imageVector = Icons.Sharp.LocationOn, contentDescription = null)
+        Column(
+            modifier = Modifier.weight(1f)
         ) {
-            items(items = historyList.itemList, key = { it.id }) {
-                Text(
-                    text = "${it}",
-                    modifier = Modifier.clickable {
-
-                    }
+            Row {
+                RichText(
+                    state = richTextState.setHtml(query.title),
+                    modifier = Modifier.weight(1f)
+                )
+                AdaptiveText(
+                    text = query.categories.last()
                 )
             }
+            Row {
+                AdaptiveText(
+                    text = query.address,
+                    modifier = Modifier.weight(1f)
+                )
+                AdaptiveText(
+                    text = LocationUtils.measure(uiState.item.currentLatLng, Pair(query.latitude, query.longitude)).diffToString()
+                )
+            }
+
         }
     }
 }
@@ -336,6 +608,12 @@ fun RouteSheetContent(
     ) {
         item { Button(onClick = onRequestRoute) { Text(text = "확인") } }
         item { Text(text = "현위치") }
+        item {
+            Row {
+                Checkbox(checked = uiState.item.isOrdered, onCheckedChange = { onItemValueChanged(uiState.item.copy(isOrdered = it)) })
+                Text(text = "순서 중요")
+            }
+        }
         itemsIndexed(items = uiState.item.layovers, key = { index, item -> index }) { index, value ->
             Row {
                 TextField(
@@ -368,6 +646,95 @@ fun RouteSheetContent(
                     }
                 ) {
                     Icon(imageVector = Icons.Sharp.Add, contentDescription = null)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HistorySheetContent(
+    modifier: Modifier = Modifier,
+    uiState: TransportUiState,
+    onItemValueChanged: (TransportDetails) -> Unit,
+    historyList: TransportHistoryUiStateList
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    AdaptiveBackButton { onItemValueChanged(uiState.item.copy(sheetType = SheetType.SEARCH)) }
+                },
+                title = { Text(text = "History") },
+            )
+        },
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(it)
+        ) {
+            historyList.itemList.groupByTime().forEach { pair ->
+                if (pair.second.isNotEmpty()) {
+                    HistoryList(
+                        pair = pair,
+                        uiState = uiState,
+                        onItemValueChanged = onItemValueChanged
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HistoryList(
+    modifier: Modifier = Modifier,
+    pair: Pair<HistoryGroup, List<HistoryDetails>>,
+    uiState: TransportUiState,
+    onItemValueChanged: (TransportDetails) -> Unit
+) {
+    Column(
+        modifier = modifier
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = stringResource(when (pair.first) {
+                    HistoryGroup.TODAY -> Res.string.today
+                    HistoryGroup.YESTERDAY -> Res.string.yesterday
+                    HistoryGroup.WEEK -> Res.string.this_week
+                    HistoryGroup.MONTH -> Res.string.this_month
+                    HistoryGroup.YEAR -> Res.string.this_year
+                    HistoryGroup.OLD -> Res.string.long_ago
+                }),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 16.dp)
+            )
+        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+                .padding(horizontal = 16.dp)
+        ) {
+            itemsIndexed(items = pair.second, key = { _, item -> item.id }) { index, item ->
+                val shape = when (index) {
+                    0 -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                    pair.second.size - 1 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                    else -> RectangleShape
+                }
+                HistoryRow(
+                    item = item,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant, shape)
+                )
+                if (index != pair.second.size - 1) {
+                    HorizontalDivider()
                 }
             }
         }

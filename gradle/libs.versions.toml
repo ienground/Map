@@ -27,6 +27,8 @@ datastore = "1.1.1"
 composeShimmer = "1.3.1" # material3과 같이 버전업
 naver-maps = "3.19.1"
 ktor = "3.0.0"
+ksoup = "0.4.0"
+
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -85,6 +87,16 @@ cupertino-icons-extended = { group = "io.github.alexzhirkevich", name = "cuperti
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+
+# ksoup
+ksoup-html = { group = "com.mohamedrejeb.ksoup", name = "ksoup-html", version.ref = "ksoup" }
+ksoup-entities = { group = "com.mohamedrejeb.ksoup", name = "ksoup-entities", version.ref = "ksoup" }
+
+# rich
+richeditor = { group = "com.mohamedrejeb.richeditor", name = "richeditor-compose", version = "1.0.0-rc09" }
+
+# formatter
+human-readable = { group = "nl.jacobras", name = "Human-Readable", version = "1.10.0" }
 
 # android only
 compose-permission = { group = "com.google.accompanist", name = "accompanist-permissions", version = "0.34.0"}

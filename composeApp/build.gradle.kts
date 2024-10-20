@@ -94,6 +94,15 @@ kotlin {
             // ktor
             implementation(libs.ktor.client.core)
 
+            // ksoup
+            implementation(libs.ksoup.html)
+
+            // rich editor
+            implementation(libs.richeditor)
+
+            // formatter
+            implementation(libs.human.readable)
+
             // cupertino
             implementation(libs.cupertino)
             implementation(libs.cupertino.native)

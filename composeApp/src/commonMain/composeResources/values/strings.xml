@@ -50,29 +50,6 @@
     <string name="ask_to_save_message">Unsaved changes will be lost.</string>
     <string name="not_save">Not save</string>
 
-    <!--getRepeatLabel-->
-    <string name="repeat">Repeat</string>
-    <string name="sun">Sun</string>
-    <string name="mon">Mon</string>
-    <string name="tue">Tue</string>
-    <string name="wed">Wed</string>
-    <string name="thu">Thu</string>
-    <string name="fri">Fri</string>
-    <string name="sat">Sat</string>
-    <string name="sunday">Sunday</string>
-    <string name="monday">Monday</string>
-    <string name="tuesday">Tuesday</string>
-    <string name="wednesday">Wednesday</string>
-    <string name="thursday">Thursday</string>
-    <string name="friday">Friday</string>
-    <string name="saturday">Saturday</string>
-    <string name="today">Today</string>
-    <string name="tomorrow">Tomorrow</string>
-    <string name="yesterday">Yesterday</string>
-    <string name="weekend">Weekend</string>
-    <string name="weekday">Weekday</string>
-    <string name="everyday">Everyday</string>
-
     <!--Time (Picker) String-->
     <string name="date_picker_title">Select date</string>
     <string name="time_picker_title">Select time</string>
@@ -94,6 +71,7 @@
     <string name="more_options">More options</string>
     <string name="tooltip_description">tooltip</string>
     <string name="tooltip_label">show tooltip</string>
+    <string name="more">더보기</string>
 
     <!--Detail Screen-->
     <string name="edit">Edit</string>
@@ -106,6 +84,20 @@
     <string name="at_least_one_item">At least one item</string>
     <string name="alarm_ring">Set alarm ring</string>
     <string name="vibrate">Vibrate</string>
+
+    <!--Transport-->
+    <string name="home">집</string>
+    <string name="office">직장</string>
+    <string name="school">학교</string>
+    <string name="recent">최근</string>
+
+    <!--History-->
+    <string name="today">오늘</string>
+    <string name="yesterday">어제</string>
+    <string name="this_week">이번 주</string>
+    <string name="this_month">이번 달</string>
+    <string name="this_year">올해</string>
+    <string name="long_ago">이전</string>
 
     <!--Notification-->
     <string name="calarm_alarm">Calarm Alarm</string>
@@ -219,24 +211,4 @@
     <string name="sample_calarm_account_type" translatable="false">com.google</string>
     <string name="sample_calarm_display_name" translatable="false">my@ien.zone</string>
     <string name="sample_calarm_color2" translatable="false">#7C4DFF</string>
-
-    <!-- UNUSED Beta Channel -->
-    <string name="submit_beta_opinion">Submit Beta Opinion</string>
-    <string name="beta_submit_channel">Beta Submit Channel\n* Required</string>
-    <string name="q1_alarm_good">What\'s good about alarm? *</string>
-    <string name="q2_alarm_bad">What\'s lacking in alarm? *</string>
-    <string name="q3_calendar_alarm_good">What\'s good about calendar alarm? *</string>
-    <string name="q4_calendar_alarm_bad">What\'s lacking in calendar alarm? *</string>
-    <string name="q5_timer_good">What\'s good about timer? *</string>
-    <string name="q6_timer_bad">What\'s lacking in timer? *</string>
-    <string name="q7_stopwatch_good">What\'s good about stopwatch? *</string>
-    <string name="q8_stopwatch_bad">What\'s lacking in stopwatch? *</string>
-    <string name="q9_deskclock_good">What\'s good about deskclock? *</string>
-    <string name="q10_deskclock_bad">What\'s lacking in deskclock? *</string>
-    <string name="q11_etc">What would you like to say to the developer?</string>
-    <string name="submit">Submit</string>
-    <string name="email">E-mail *</string>
-    <string name="fill_out">Fill out this blank</string>
-    <string name="subnission_success">Submission Success</string>
-    <string name="subnission_fail">Submission Fail. Check the internet.</string>
 </resources>
