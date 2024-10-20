@@ -1,5 +1,7 @@
 package zone.ien.map.ui.screens.home.transport
 
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SheetValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -46,6 +48,7 @@ import zone.ien.map.utils.LocationUtils
 import zone.ien.map.utils.measure
 import zone.ien.map.utils.now
 
+@OptIn(ExperimentalMaterial3Api::class)
 class TransportViewModel(
     val favoriteRepository: FavoriteRepository,
     val historyRepository: HistoryRepository
@@ -96,6 +99,7 @@ class TransportViewModel(
         LocationUtils.getCurrentLocation()
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     fun searchDestination(query: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -104,7 +108,6 @@ class TransportViewModel(
                     header("X-Naver-Client-Secret", ApiKey.NAVER_CLIENT_SECRET)
                 }
                 val result = Json.decodeFromString<JsonObject>(response.bodyAsText())["items"]?.jsonArray?.map {
-                    Dlog.d(TAG, "json: ${it}")
                     val jsonObject = it.jsonObject
                     val title = jsonObject["title"]?.jsonPrimitive?.content ?: ""
                     val category = jsonObject["category"]?.jsonPrimitive?.content ?: ""
@@ -126,6 +129,24 @@ class TransportViewModel(
     }
 
     fun requestRoute() {
+        // 저장
+        CoroutineScope(Dispatchers.IO).launch {
+            uiState.item.selectedQuery?.let { query ->
+                val item = History(label = query.title, address = query.address, latitude = query.latitude, longitude = query.longitude, category = query.categories.joinToString(">"))
+                val id = historyRepository.getByCoordinate(query.latitude, query.longitude)
+
+                if (id == null) {
+                    historyRepository.upsert(item)
+                } else {
+                    historyRepository.upsert(item.apply { this.id = id })
+                }
+            }
+        }
+
+        // 경로 요청
+
+
+        // 표시
     }
 
     companion object {
@@ -143,15 +164,16 @@ data class TransportFavoriteUiStateList(
     val isInitialized: Boolean = false
 )
 
-data class TransportUiState(
+data class TransportUiState @OptIn(ExperimentalMaterial3Api::class) constructor(
     val item: TransportDetails = TransportDetails()
 )
 
-data class TransportDetails(
+data class TransportDetails @OptIn(ExperimentalMaterial3Api::class) constructor(
     val query: String = "",
     val searchActive: Boolean = false,
     val queryResults: List<QueryResult> = listOf(),
     val sheetType: SheetType = SheetType.SEARCH,
+    val sheetState: SheetValue = SheetValue.PartiallyExpanded,
     val isOrdered: Boolean = false,
     val selectedQuery: QueryResult? = null,
 
@@ -167,7 +189,7 @@ data class HistoryDetails(
     val address: String = "",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
-    val category: Int = -1,
+    val category: String = "",
     val lastUsedTime: KZonedDateTime = KZonedDateTime.now()
 )
 

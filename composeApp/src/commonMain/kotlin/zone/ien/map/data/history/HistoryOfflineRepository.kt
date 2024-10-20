@@ -9,6 +9,8 @@ class HistoryOfflineRepository(private val dao: HistoryDao): HistoryRepository {
 
     override fun getSize(): Flow<Int> = dao.getSize()
 
+    override fun getByCoordinate(latitude: Double, longitude: Double): Long? = dao.getByCoordinate(latitude, longitude)
+
     override suspend fun upsert(data: History) = dao.upsert(data)
 
     override suspend fun delete(data: History) = dao.delete(data)

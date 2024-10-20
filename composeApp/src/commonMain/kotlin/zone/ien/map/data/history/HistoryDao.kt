@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
+import zone.ien.map.data.favorite.Favorite
 
 @Dao
 interface HistoryDao {
@@ -22,5 +23,8 @@ interface HistoryDao {
 
     @Query("SELECT COUNT(*) FROM History")
     fun getSize(): Flow<Int>
+
+    @Query("SELECT id FROM History WHERE latitude = :latitude AND longitude = :longitude")
+    fun getByCoordinate(latitude: Double, longitude: Double): Long?
 
 }

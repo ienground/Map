@@ -1,16 +1,20 @@
 package zone.ien.map.ui.screens.home.transport
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.with
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -71,6 +76,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -80,9 +86,15 @@ import com.mohamedrejeb.richeditor.ui.material3.RichText
 import io.github.alexzhirkevich.cupertino.CupertinoBottomSheetDefaults
 import kotlinx.coroutines.launch
 import map.composeapp.generated.resources.Res
+import map.composeapp.generated.resources.add
+import map.composeapp.generated.resources.home
+import map.composeapp.generated.resources.input_query
 import map.composeapp.generated.resources.long_ago
 import map.composeapp.generated.resources.more
+import map.composeapp.generated.resources.office
+import map.composeapp.generated.resources.query_empty
 import map.composeapp.generated.resources.recent
+import map.composeapp.generated.resources.school
 import map.composeapp.generated.resources.this_month
 import map.composeapp.generated.resources.this_week
 import map.composeapp.generated.resources.this_year
@@ -102,6 +114,7 @@ import zone.ien.map.utils.groupByTime
 import zone.ien.map.utils.maps.MapScreen
 import zone.ien.map.utils.measure
 import zone.ien.map.utils.safeSubList
+import zone.ien.map.utils.timeInMillis
 
 object TransportDestination: NavigationDestination {
     override val route: String = "transport"
@@ -127,12 +140,13 @@ fun TransportScreen(
     }
 
     LaunchedEffect(sheetState.bottomSheetState.currentValue) {
+        viewModel.updateUiState(viewModel.uiState.item.copy(sheetState = sheetState.bottomSheetState.currentValue))
         if (sheetState.bottomSheetState.currentValue == SheetValue.PartiallyExpanded) {
             viewModel.updateUiState(viewModel.uiState.item.copy(searchActive = false))
+            if (viewModel.uiState.item.sheetType == SheetType.HISTORY) {
+                viewModel.updateUiState(viewModel.uiState.item.copy(sheetType = SheetType.SEARCH))
+            }
         }
-//        } else if (sheetState.bottomSheetState.currentValue == SheetValue.Expanded) {
-//            viewModel.updateUiState(viewModel.uiState.item.copy(searchActive = true))
-//        }
     }
 
     val sheetHeight = animateDpAsState(
@@ -278,6 +292,9 @@ fun SearchSheetContent(
                     sheetState.bottomSheetState.expand()
                 }
             },
+            placeholder = {
+                Text(stringResource(Res.string.input_query))
+            },
             leadingIcon = {
 
             },
@@ -289,18 +306,43 @@ fun SearchSheetContent(
             },
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
             ) {
-                itemsIndexed(items = uiState.item.queryResults, key = { _, item -> item.title }) { index, item ->
-                    SearchRow(
-                        uiState = uiState,
-                        query = item,
-                        onClick = { onItemValueChanged(uiState.item.copy(currentLatLng = Pair(item.latitude, item.longitude), selectedQuery = item, sheetType = SheetType.DETAIL)) },
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = uiState.item.queryResults.isEmpty(),
+                    enter = fadeIn(tween(700)),
+                    exit = fadeOut(tween(700))
+                ) {
+                    Text(
+                        text = stringResource(Res.string.query_empty),
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
+                            .fillMaxWidth()
+                            .height(400.dp)
+                            .wrapContentHeight()
                     )
-                    if (index != uiState.item.queryResults.size - 1) {
-                        HorizontalDivider()
+                }
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = uiState.item.queryResults.isNotEmpty(),
+                    enter = fadeIn(tween(700)),
+                    exit = fadeOut(tween(700))
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        itemsIndexed(items = uiState.item.queryResults, key = { _, item -> item.title }) { index, item ->
+                            SearchRow(
+                                uiState = uiState,
+                                query = item,
+                                onClick = { onItemValueChanged(uiState.item.copy(currentLatLng = Pair(item.latitude, item.longitude), selectedQuery = item, sheetType = SheetType.DETAIL)) },
+                                modifier = Modifier
+                            )
+                            if (index != uiState.item.queryResults.size - 1) {
+                                HorizontalDivider()
+                            }
+                        }
                     }
                 }
             }
@@ -319,6 +361,7 @@ fun SearchSheetContent(
                             uiState = uiState,
                             item = favoriteList.itemList.firstOrNull { it.type == Favorite.Type.HOME }
                                 ?: FavoriteDetails(type = Favorite.Type.HOME),
+                            onClick = {},
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
@@ -327,6 +370,7 @@ fun SearchSheetContent(
                             uiState = uiState,
                             item = favoriteList.itemList.firstOrNull { it.type == Favorite.Type.OFFICE }
                                 ?: FavoriteDetails(type = Favorite.Type.OFFICE),
+                            onClick = {},
                         )
                     }
                     item {
@@ -334,12 +378,14 @@ fun SearchSheetContent(
                             uiState = uiState,
                             item = favoriteList.itemList.firstOrNull { it.type == Favorite.Type.SCHOOL }
                                 ?: FavoriteDetails(type = Favorite.Type.SCHOOL),
+                            onClick = {},
                         )
                     }
                     items(items = favoriteList.itemList.filter { it.type == Favorite.Type.ETC }, key = { it.id }) { item ->
                         FavoriteRow(
                             uiState = uiState,
                             item = item,
+                            onClick = {},
                             modifier = Modifier.animateItemPlacement()
                         )
                     }
@@ -369,8 +415,8 @@ fun SearchSheetContent(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 ) {
-                    itemsIndexed(items = historyList.itemList.safeSubList(0, 3), key = { _, item -> item.id }) { index, item ->
-                        val shape = when (index) {
+                    itemsIndexed(items = historyList.itemList.sortedByDescending { it.lastUsedTime.timeInMillis() }.safeSubList(0, 3), key = { _, item -> item.id }) { index, item ->
+                        val shape = if (historyList.itemList.size == 1) RoundedCornerShape(16.dp) else when (index) {
                             0 -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                             historyList.itemList.size - 1, 2 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
                             else -> RectangleShape
@@ -379,7 +425,12 @@ fun SearchSheetContent(
                             item = item,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surfaceVariant, shape)
+                                .clip(shape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable {
+                                    onItemValueChanged(uiState.item.copy(selectedQuery = QueryResult(title = item.label, address = item.address, latitude = item.latitude, longitude = item.longitude), sheetType = SheetType.DETAIL)
+                                    )
+                                }
                         )
                         if (index != historyList.itemList.size - 1 && index != 2) {
                             HorizontalDivider()
@@ -396,18 +447,17 @@ fun FavoriteRow(
     modifier: Modifier = Modifier,
     uiState: TransportUiState,
     item: FavoriteDetails,
+    onClick: () -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .clickable {
-
-            }
+            .clickable(onClick = onClick)
             .padding(8.dp)
     ) {
         FavoriteIconButton(
-            onClick = {},
+            onClick = onClick,
             item = item,
             contentColor = when (item.type) {
                 Favorite.Type.HOME -> MaterialTheme.colorScheme.onPrimaryContainer
@@ -434,14 +484,22 @@ fun FavoriteRow(
             )
         }
         Text(
-            text = item.label,
+            text =
+                if (item.id != -1L) item.label
+                else when (item.type) {
+                    Favorite.Type.HOME -> stringResource(Res.string.home)
+                    Favorite.Type.OFFICE -> stringResource(Res.string.office)
+                    Favorite.Type.SCHOOL -> stringResource(Res.string.school)
+                    else -> ""
+                }
+            ,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 4.dp)
         )
         Text(
-            text = if (item.id != -1L) LocationUtils.measure(uiState.item.currentLatLng, Pair(item.latitude, item.longitude)).diffToString() else "",
-            fontSize = 10.sp
+            text = if (item.id != -1L) LocationUtils.measure(uiState.item.currentLatLng, Pair(item.latitude, item.longitude)).diffToString() else stringResource(Res.string.add),
+            fontSize = 12.sp
         )
     }
 }
@@ -530,9 +588,9 @@ fun SearchRow(
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
+            .clickable(onClick = onClick)
             .padding(16.dp)
             .fillMaxWidth()
-            .clickable(onClick = onClick)
     ) {
         Icon(imageVector = Icons.Sharp.LocationOn, contentDescription = null)
         Column(
@@ -561,41 +619,55 @@ fun SearchRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailSheetContent(
     modifier: Modifier = Modifier,
     uiState: TransportUiState,
     onItemValueChanged: (TransportDetails) -> Unit
 ) {
-    Column(
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    AdaptiveBackButton { onItemValueChanged(uiState.item.copy(sheetType = SheetType.SEARCH)) }
+                },
+                title = {}
+            )
+        },
         modifier = modifier
     ) {
-        Text(
-            text = uiState.item.selectedQuery?.title ?: ""
-        )
-        FilledTonalButton(
-            onClick = {
-                onItemValueChanged(uiState.item.copy(sheetType = SheetType.ROUTE, searchActive = false))
-            }
+        Column(
+            modifier = Modifier.padding(it)
         ) {
-            Icon(
-                imageVector = Icons.Sharp.Navigation,
-                contentDescription = null
+            Text(
+                text = uiState.item.selectedQuery?.title ?: ""
             )
-        }
-        FilledTonalButton(
-            onClick = {
-                onItemValueChanged(uiState.item.copy(sheetType = SheetType.SEARCH, selectedQuery = null, searchActive = false))
+            FilledTonalButton(
+                onClick = {
+                    onItemValueChanged(uiState.item.copy(sheetType = SheetType.ROUTE, searchActive = false))
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Sharp.Navigation,
+                    contentDescription = null
+                )
             }
-        ) {
-            Icon(
-                imageVector = Icons.Sharp.Close,
-                contentDescription = null
-            )
+            FilledTonalButton(
+                onClick = {
+                    onItemValueChanged(uiState.item.copy(sheetType = SheetType.SEARCH, selectedQuery = null, searchActive = false))
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Sharp.Close,
+                    contentDescription = null
+                )
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RouteSheetContent(
     modifier: Modifier = Modifier,
@@ -603,49 +675,61 @@ fun RouteSheetContent(
     onItemValueChanged: (TransportDetails) -> Unit,
     onRequestRoute: () -> Unit
 ) {
-    LazyColumn(
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    AdaptiveBackButton { onItemValueChanged(uiState.item.copy(sheetType = SheetType.DETAIL)) }
+                },
+                title = {}
+            )
+        },
         modifier = modifier
     ) {
-        item { Button(onClick = onRequestRoute) { Text(text = "확인") } }
-        item { Text(text = "현위치") }
-        item {
-            Row {
-                Checkbox(checked = uiState.item.isOrdered, onCheckedChange = { onItemValueChanged(uiState.item.copy(isOrdered = it)) })
-                Text(text = "순서 중요")
-            }
-        }
-        itemsIndexed(items = uiState.item.layovers, key = { index, item -> index }) { index, value ->
-            Row {
-                TextField(
-                    value = value,
-                    onValueChange = {
-                        val layovers = uiState.item.layovers.toMutableList()
-                        layovers[index] = it
-                        onItemValueChanged(uiState.item.copy(layovers = layovers))
-                    }
-                )
-                IconButton(
-                    onClick = {
-                        val layovers = uiState.item.layovers.toMutableList()
-                        layovers.removeAt(index)
-                        onItemValueChanged(uiState.item.copy(layovers = layovers))
-                    }
-                ) {
-                    Icon(imageVector = Icons.Sharp.RemoveCircle, contentDescription = null)
+        LazyColumn(
+            modifier = Modifier.padding(it)
+        ) {
+            item { Button(onClick = onRequestRoute) { Text(text = "확인") } }
+            item { Text(text = "현위치") }
+            item {
+                Row {
+                    Checkbox(checked = uiState.item.isOrdered, onCheckedChange = { onItemValueChanged(uiState.item.copy(isOrdered = it)) })
+                    Text(text = "순서 중요")
                 }
             }
-        }
-        item {
-            Row {
-                Text(text = uiState.item.selectedQuery?.title ?: "")
-                IconButton(
-                    onClick = {
-                        val layovers = uiState.item.layovers.toMutableList()
-                        layovers.add("")
-                        onItemValueChanged(uiState.item.copy(layovers = layovers))
+            itemsIndexed(items = uiState.item.layovers, key = { index, item -> index }) { index, value ->
+                Row {
+                    TextField(
+                        value = value,
+                        onValueChange = {
+                            val layovers = uiState.item.layovers.toMutableList()
+                            layovers[index] = it
+                            onItemValueChanged(uiState.item.copy(layovers = layovers))
+                        }
+                    )
+                    IconButton(
+                        onClick = {
+                            val layovers = uiState.item.layovers.toMutableList()
+                            layovers.removeAt(index)
+                            onItemValueChanged(uiState.item.copy(layovers = layovers))
+                        }
+                    ) {
+                        Icon(imageVector = Icons.Sharp.RemoveCircle, contentDescription = null)
                     }
-                ) {
-                    Icon(imageVector = Icons.Sharp.Add, contentDescription = null)
+                }
+            }
+            item {
+                Row {
+                    Text(text = uiState.item.selectedQuery?.title ?: "")
+                    IconButton(
+                        onClick = {
+                            val layovers = uiState.item.layovers.toMutableList()
+                            layovers.add("")
+                            onItemValueChanged(uiState.item.copy(layovers = layovers))
+                        }
+                    ) {
+                        Icon(imageVector = Icons.Sharp.Add, contentDescription = null)
+                    }
                 }
             }
         }
@@ -679,7 +763,8 @@ fun HistorySheetContent(
                     HistoryList(
                         pair = pair,
                         uiState = uiState,
-                        onItemValueChanged = onItemValueChanged
+                        onItemValueChanged = onItemValueChanged,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }
             }
@@ -722,7 +807,7 @@ fun HistoryList(
                 .padding(horizontal = 16.dp)
         ) {
             itemsIndexed(items = pair.second, key = { _, item -> item.id }) { index, item ->
-                val shape = when (index) {
+                val shape = if (pair.second.size == 1) RoundedCornerShape(16.dp) else when (index) {
                     0 -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                     pair.second.size - 1 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
                     else -> RectangleShape
@@ -731,7 +816,10 @@ fun HistoryList(
                     item = item,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant, shape)
+                        .clip(shape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable {
+                        }
                 )
                 if (index != pair.second.size - 1) {
                     HorizontalDivider()

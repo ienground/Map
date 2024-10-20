@@ -72,6 +72,7 @@
     <string name="tooltip_description">tooltip</string>
     <string name="tooltip_label">show tooltip</string>
     <string name="more">더보기</string>
+    <string name="add">추가</string>
 
     <!--Detail Screen-->
     <string name="edit">Edit</string>
@@ -90,6 +91,8 @@
     <string name="office">직장</string>
     <string name="school">학교</string>
     <string name="recent">최근</string>
+    <string name="query_empty">결과 없음</string>
+    <string name="input_query">검색..</string>
 
     <!--History-->
     <string name="today">오늘</string>

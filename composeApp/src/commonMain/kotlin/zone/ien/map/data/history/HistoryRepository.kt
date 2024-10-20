@@ -9,6 +9,8 @@ interface HistoryRepository {
 
     fun getSize(): Flow<Int>
 
+    fun getByCoordinate(latitude: Double, longitude: Double): Long?
+
     suspend fun upsert(data: History): Long
 
     suspend fun delete(data: History)
