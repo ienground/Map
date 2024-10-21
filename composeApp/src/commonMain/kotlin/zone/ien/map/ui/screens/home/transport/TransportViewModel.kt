@@ -47,6 +47,7 @@ import zone.ien.map.utils.Dlog
 import zone.ien.map.utils.LocationUtils
 import zone.ien.map.utils.measure
 import zone.ien.map.utils.now
+import zone.ien.map.utils.toAddress
 
 @OptIn(ExperimentalMaterial3Api::class)
 class TransportViewModel(
@@ -73,6 +74,9 @@ class TransportViewModel(
                 initialValue = TransportFavoriteUiStateList()
             )
 
+    var queryUiState by mutableStateOf(TransportQueryUiState(isInitialized = true))
+        private set
+
     var uiState by mutableStateOf(TransportUiState())
         private set
 
@@ -86,7 +90,7 @@ class TransportViewModel(
                 val currentLongitude = it[Pref.Key.CURRENT_LONGITUDE] ?: 0.0
 
                 updateUiState(uiState.item.copy(currentLatLng = Pair(currentLatitude, currentLongitude)))
-
+                getAddress(currentLatitude, currentLongitude)
             }
         }
     }
@@ -99,10 +103,26 @@ class TransportViewModel(
         LocationUtils.getCurrentLocation()
     }
 
+    fun getAddress(latitude: Double, longitude: Double) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = client.get("https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${longitude}%2C${latitude}&output=json&orders=addr%2Croadaddr") {
+                    header("x-ncp-apigw-api-key-id", ApiKey.NAVER_MAP_CLIENT_KEY_ID)
+                    header("x-ncp-apigw-api-key", ApiKey.NAVER_MAP_CLIENT_KEY)
+                }
+                val result = Json.decodeFromString<JsonObject>(response.bodyAsText())["results"]?.jsonArray
+                updateUiState(uiState.item.copy(currentAddress = result?.toAddress() ?: ""))
+            } catch (e: Exception) {
+                Dlog.e(TAG, "error: ${e}")
+            }
+        }
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     fun searchDestination(query: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                queryUiState = TransportQueryUiState(isInitialized = false, itemList = listOf())
                 val response = client.get("https://openapi.naver.com/v1/search/local.json?query=${query.encodeURLParameter()}&display=10&start=5&sort=random") {
                     header("X-Naver-Client-Id", ApiKey.NAVER_CLIENT_ID)
                     header("X-Naver-Client-Secret", ApiKey.NAVER_CLIENT_SECRET)
@@ -120,8 +140,8 @@ class TransportViewModel(
                     QueryResult(title = title, categories = category.split(">"), telephone = telephone, address = address, roadAddress = roadAddress, latitude = latitude, longitude = longitude)
                 }
 
-
-                updateUiState(uiState.item.copy(searchActive = true, queryResults = result ?: listOf()))
+                queryUiState = TransportQueryUiState(isInitialized = true, itemList = result ?: listOf())
+                updateUiState(uiState.item.copy(searchActive = true))
             } catch (e: Exception) {
                 Dlog.e(TAG, "error: ${e}")
             }
@@ -164,14 +184,19 @@ data class TransportFavoriteUiStateList(
     val isInitialized: Boolean = false
 )
 
+data class TransportQueryUiState(
+    val itemList: List<QueryResult> = listOf(),
+    val isInitialized: Boolean = false
+)
+
 data class TransportUiState @OptIn(ExperimentalMaterial3Api::class) constructor(
-    val item: TransportDetails = TransportDetails()
+    val item: TransportDetails = TransportDetails(),
 )
 
 data class TransportDetails @OptIn(ExperimentalMaterial3Api::class) constructor(
     val query: String = "",
     val searchActive: Boolean = false,
-    val queryResults: List<QueryResult> = listOf(),
+//    val queryResults: List<QueryResult> = listOf(),
     val sheetType: SheetType = SheetType.SEARCH,
     val sheetState: SheetValue = SheetValue.PartiallyExpanded,
     val isOrdered: Boolean = false,

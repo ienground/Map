@@ -131,6 +131,11 @@ fun List<HistoryDetails>.groupByTime(): List<Pair<HistoryGroup, List<HistoryDeta
 }
 
 /**
+ * Text
+ */
+fun String.removeBoldTag() = replace(Regex("<b>|</b>"), "")
+
+/**
  * Permissions
  */
 //expect fun getPermissions(): List<Permissions>

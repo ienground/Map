@@ -1,0 +1,189 @@
+[
+  {
+    "name": "addr",
+    "code": {
+      "id": "1144011000",
+      "type": "L",
+      "mappingId": "09440110"
+    },
+    "region": {
+      "area0": {
+        "name": "kr",
+        "coords": {
+          "center": {
+            "crs": "",
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "area1": {
+        "name": "서울특별시",
+        "coords": {
+          "center": {
+            "crs": "EPSG:4326",
+            "x": 126.978388,
+            "y": 37.56661
+          }
+        },
+        "alias": "서울"
+      },
+      "area2": {
+        "name": "마포구",
+        "coords": {
+          "center": {
+            "crs": "EPSG:4326",
+            "x": 126.901491,
+            "y": 37.566325
+          }
+        }
+      },
+      "area3": {
+        "name": "노고산동",
+        "coords": {
+          "center": {
+            "crs": "EPSG:4326",
+            "x": 126.938,
+            "y": 37.5541
+          }
+        }
+      },
+      "area4": {
+        "name": "",
+        "coords": {
+          "center": {
+            "crs": "",
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      }
+    },
+    "land": {
+      "type": "1",
+      "number1": "1",
+      "number2": "59",
+      "addition0": {
+        "type": "",
+        "value": ""
+      },
+      "addition1": {
+        "type": "",
+        "value": ""
+      },
+      "addition2": {
+        "type": "",
+        "value": ""
+      },
+      "addition3": {
+        "type": "",
+        "value": ""
+      },
+      "addition4": {
+        "type": "",
+        "value": ""
+      },
+      "coords": {
+        "center": {
+          "crs": "",
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    }
+  },
+  {
+    "name": "roadaddr",
+    "code": {
+      "id": "1144011000",
+      "type": "L",
+      "mappingId": "09440110"
+    },
+    "region": {
+      "area0": {
+        "name": "kr",
+        "coords": {
+          "center": {
+            "crs": "",
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "area1": {
+        "name": "서울특별시",
+        "coords": {
+          "center": {
+            "crs": "EPSG:4326",
+            "x": 126.978388,
+            "y": 37.56661
+          }
+        },
+        "alias": "서울"
+      },
+      "area2": {
+        "name": "마포구",
+        "coords": {
+          "center": {
+            "crs": "EPSG:4326",
+            "x": 126.901491,
+            "y": 37.566325
+          }
+        }
+      },
+      "area3": {
+        "name": "노고산동",
+        "coords": {
+          "center": {
+            "crs": "EPSG:4326",
+            "x": 126.938,
+            "y": 37.5541
+          }
+        }
+      },
+      "area4": {
+        "name": "",
+        "coords": {
+          "center": {
+            "crs": "",
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      }
+    },
+    "land": {
+      "type": "",
+      "number1": "5",
+      "number2": "",
+      "addition0": {
+        "type": "building",
+        "value": ""
+      },
+      "addition1": {
+        "type": "zipcode",
+        "value": "04103"
+      },
+      "addition2": {
+        "type": "roadGroupCode",
+        "value": "114404139400"
+      },
+      "addition3": {
+        "type": "",
+        "value": ""
+      },
+      "addition4": {
+        "type": "",
+        "value": ""
+      },
+      "name": "신촌로24안길",
+      "coords": {
+        "center": {
+          "crs": "",
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    }
+  }
+]

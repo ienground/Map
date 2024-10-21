@@ -31,11 +31,16 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.sharp.Add
+import androidx.compose.material.icons.sharp.Bookmark
+import androidx.compose.material.icons.sharp.Check
 import androidx.compose.material.icons.sharp.Close
+import androidx.compose.material.icons.sharp.DragHandle
+import androidx.compose.material.icons.sharp.Flag
 import androidx.compose.material.icons.sharp.History
 import androidx.compose.material.icons.sharp.Home
 import androidx.compose.material.icons.sharp.LocationOn
 import androidx.compose.material.icons.sharp.Navigation
+import androidx.compose.material.icons.sharp.NearMe
 import androidx.compose.material.icons.sharp.Person
 import androidx.compose.material.icons.sharp.Place
 import androidx.compose.material.icons.sharp.RemoveCircle
@@ -45,6 +50,7 @@ import androidx.compose.material.icons.sharp.Work
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,30 +65,42 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
+import com.valentinilk.shimmer.shimmer
 import io.github.alexzhirkevich.cupertino.CupertinoBottomSheetDefaults
 import kotlinx.coroutines.launch
 import map.composeapp.generated.resources.Res
@@ -101,18 +119,21 @@ import map.composeapp.generated.resources.this_year
 import map.composeapp.generated.resources.today
 import map.composeapp.generated.resources.yesterday
 import org.jetbrains.compose.resources.stringResource
+import zone.ien.map.TAG
 import zone.ien.map.data.QueryResult
 import zone.ien.map.data.favorite.Favorite
 import zone.ien.map.ui.AppViewModelProvider
 import zone.ien.map.ui.navigation.NavigationDestination
 import zone.ien.map.ui.utils.view.AdaptiveBackButton
 import zone.ien.map.ui.utils.view.AdaptiveText
+import zone.ien.map.utils.Dlog
 import zone.ien.map.utils.HistoryGroup
 import zone.ien.map.utils.LocationUtils
 import zone.ien.map.utils.diffToString
 import zone.ien.map.utils.groupByTime
 import zone.ien.map.utils.maps.MapScreen
 import zone.ien.map.utils.measure
+import zone.ien.map.utils.removeBoldTag
 import zone.ien.map.utils.safeSubList
 import zone.ien.map.utils.timeInMillis
 
@@ -152,8 +173,9 @@ fun TransportScreen(
     val sheetHeight = animateDpAsState(
         targetValue = when (viewModel.uiState.item.sheetType) {
             SheetType.SEARCH -> if (viewModel.uiState.item.searchActive) 800.dp else 514.dp
-            SheetType.DETAIL -> 100.dp
-            SheetType.ROUTE -> 800.dp
+            SheetType.DETAIL -> 214.dp
+            SheetType.ROUTE -> 200.dp + 58.dp * viewModel.uiState.item.layovers.size
+//            SheetType.ROUTE -> 800.dp
             SheetType.HISTORY -> 800.dp
         },
     )
@@ -176,6 +198,7 @@ fun TransportScreen(
                         onItemValueChanged = viewModel::updateUiState,
                         onSearchDestination = viewModel::searchDestination,
                         sheetState = sheetState,
+                        queryUiState = viewModel.queryUiState,
                         historyList = historyUiStateList,
                         favoriteList = favoriteUiStateList
                     )
@@ -198,7 +221,7 @@ fun TransportScreen(
                     RouteSheetContent(
                         uiState = viewModel.uiState,
                         onItemValueChanged = viewModel::updateUiState,
-                        onRequestRoute = viewModel::requestRoute
+                        onRequestRoute = viewModel::requestRoute,
                     )
                 }
                 androidx.compose.animation.AnimatedVisibility(
@@ -274,6 +297,7 @@ fun SearchSheetContent(
     onItemValueChanged: (TransportDetails) -> Unit,
     onSearchDestination: (String) -> Unit,
     sheetState: BottomSheetScaffoldState,
+    queryUiState: TransportQueryUiState,
     historyList: TransportHistoryUiStateList,
     favoriteList: TransportFavoriteUiStateList
 ) {
@@ -293,16 +317,31 @@ fun SearchSheetContent(
                 }
             },
             placeholder = {
-                Text(stringResource(Res.string.input_query))
+                AdaptiveText(stringResource(Res.string.input_query))
             },
             leadingIcon = {
-
+                AnimatedVisibility(
+                    visible = uiState.item.searchActive,
+                    enter = fadeIn(tween(700)),
+                    exit = fadeOut(tween(700))
+                ) {
+                    IconButton(
+                        onClick = { onItemValueChanged(uiState.item.copy(searchActive = false)) }
+                    ) {
+                        Icon(imageVector = Icons.Sharp.Close, contentDescription = null)
+                    }
+                }
             },
             trailingIcon = {
-                Icon(
-                    imageVector = Icons.Sharp.Search,
-                    contentDescription = null
-                )
+                IconButton(
+                    enabled = uiState.item.searchActive,
+                    onClick = { onSearchDestination(uiState.item.query) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Sharp.Search,
+                        contentDescription = null
+                    )
+                }
             },
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
@@ -311,11 +350,27 @@ fun SearchSheetContent(
                     .fillMaxWidth()
             ) {
                 androidx.compose.animation.AnimatedVisibility(
-                    visible = uiState.item.queryResults.isEmpty(),
+                    visible = !queryUiState.isInitialized,
                     enter = fadeIn(tween(700)),
                     exit = fadeOut(tween(700))
                 ) {
-                    Text(
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        repeat(5) { index ->
+                            SearchRowShimmer(modifier = Modifier.shimmer())
+                            if (index != queryUiState.itemList.size - 1) {
+                                HorizontalDivider(modifier = Modifier.shimmer())
+                            }
+                        }
+                    }
+                }
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = queryUiState.itemList.isEmpty() && queryUiState.isInitialized,
+                    enter = fadeIn(tween(700)),
+                    exit = fadeOut(tween(700))
+                ) {
+                    AdaptiveText(
                         text = stringResource(Res.string.query_empty),
                         textAlign = TextAlign.Center,
                         modifier = Modifier
@@ -325,22 +380,24 @@ fun SearchSheetContent(
                     )
                 }
                 androidx.compose.animation.AnimatedVisibility(
-                    visible = uiState.item.queryResults.isNotEmpty(),
+                    visible = queryUiState.itemList.isNotEmpty() && queryUiState.isInitialized,
                     enter = fadeIn(tween(700)),
                     exit = fadeOut(tween(700))
                 ) {
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        itemsIndexed(items = uiState.item.queryResults, key = { _, item -> item.title }) { index, item ->
+                        itemsIndexed(items = queryUiState.itemList, key = { index, _ -> index }) { index, item ->
                             SearchRow(
                                 uiState = uiState,
                                 query = item,
                                 onClick = { onItemValueChanged(uiState.item.copy(currentLatLng = Pair(item.latitude, item.longitude), selectedQuery = item, sheetType = SheetType.DETAIL)) },
-                                modifier = Modifier
+                                modifier = Modifier.animateItemPlacement()
                             )
-                            if (index != uiState.item.queryResults.size - 1) {
-                                HorizontalDivider()
+                            if (index != queryUiState.itemList.size - 1) {
+                                HorizontalDivider(
+                                    modifier = Modifier.animateItemPlacement()
+                                )
                             }
                         }
                     }
@@ -395,7 +452,7 @@ fun SearchSheetContent(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
+                    AdaptiveText(
                         text = stringResource(Res.string.recent),
                         modifier = Modifier
                             .weight(1f)
@@ -405,7 +462,7 @@ fun SearchSheetContent(
                         onClick = { onItemValueChanged(uiState.item.copy(sheetType = SheetType.HISTORY)) },
                         modifier = Modifier
                     ) {
-                        Text(
+                        AdaptiveText(
                             text = stringResource(Res.string.more)
                         )
                     }
@@ -483,7 +540,7 @@ fun FavoriteRow(
                 contentDescription = null,
             )
         }
-        Text(
+        AdaptiveText(
             text =
                 if (item.id != -1L) item.label
                 else when (item.type) {
@@ -497,7 +554,7 @@ fun FavoriteRow(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 4.dp)
         )
-        Text(
+        AdaptiveText(
             text = if (item.id != -1L) LocationUtils.measure(uiState.item.currentLatLng, Pair(item.latitude, item.longitude)).diffToString() else stringResource(Res.string.add),
             fontSize = 12.sp
         )
@@ -560,13 +617,13 @@ fun HistoryRow(
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Column {
-            Text(
-                text = item.label,
+            AdaptiveText(
+                text = item.label.removeBoldTag(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.fillMaxWidth()
             )
-            Text(
+            AdaptiveText(
                 text = item.address,
                 fontSize = 12.sp,
                 modifier = Modifier.fillMaxWidth()
@@ -586,6 +643,7 @@ fun SearchRow(
     val richTextState = rememberRichTextState()
 
     Row(
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
             .clickable(onClick = onClick)
@@ -619,6 +677,59 @@ fun SearchRow(
     }
 }
 
+@Composable
+fun SearchRowShimmer(
+    modifier: Modifier = Modifier
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+    ) {
+        Icon(imageVector = Icons.Sharp.LocationOn, contentDescription = null)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                AdaptiveText(
+                    text = "  ",
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
+                )
+                AdaptiveText(
+                    text = "",
+                    modifier = Modifier
+                        .width(40.dp)
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
+                )
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                AdaptiveText(
+                    text = "",
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
+                        .weight(1f)
+                )
+                AdaptiveText(
+                    text = "",
+                    modifier = Modifier
+                        .width(60.dp)
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
+                )
+            }
+
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailSheetContent(
@@ -637,43 +748,61 @@ fun DetailSheetContent(
         },
         modifier = modifier
     ) {
-        Column(
-            modifier = Modifier.padding(it)
-        ) {
-            Text(
-                text = uiState.item.selectedQuery?.title ?: ""
-            )
-            FilledTonalButton(
-                onClick = {
-                    onItemValueChanged(uiState.item.copy(sheetType = SheetType.ROUTE, searchActive = false))
-                }
+        uiState.item.selectedQuery?.let { query ->
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(it)
             ) {
-                Icon(
-                    imageVector = Icons.Sharp.Navigation,
-                    contentDescription = null
-                )
-            }
-            FilledTonalButton(
-                onClick = {
-                    onItemValueChanged(uiState.item.copy(sheetType = SheetType.SEARCH, selectedQuery = null, searchActive = false))
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        AdaptiveText(
+                            text = query.title.removeBoldTag(),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        AdaptiveText(
+                            text = query.address
+                        )
+                    }
+                    FilledTonalButton(
+                        onClick = {
+                            onItemValueChanged(uiState.item.copy(sheetType = SheetType.ROUTE, searchActive = false))
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Sharp.Navigation,
+                            contentDescription = null
+                        )
+                    }
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Sharp.Close,
-                    contentDescription = null
-                )
+                HorizontalDivider()
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(),
+                        onClick = {}
+                    ) {
+                        Icon(imageVector = Icons.Sharp.Bookmark, contentDescription = null)
+                    }
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun RouteSheetContent(
     modifier: Modifier = Modifier,
     uiState: TransportUiState,
     onItemValueChanged: (TransportDetails) -> Unit,
-    onRequestRoute: () -> Unit
+    onRequestRoute: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -681,58 +810,138 @@ fun RouteSheetContent(
                 navigationIcon = {
                     AdaptiveBackButton { onItemValueChanged(uiState.item.copy(sheetType = SheetType.DETAIL)) }
                 },
+                actions = {
+                    AdaptiveText(text = "순서 중요")
+                    Checkbox(checked = uiState.item.isOrdered, onCheckedChange = { onItemValueChanged(uiState.item.copy(isOrdered = it)) })
+                    IconButton(
+                        onClick = onRequestRoute
+                    ) {
+                        Icon(imageVector = Icons.Sharp.Check, contentDescription = null)
+                    }
+                },
                 title = {}
             )
         },
         modifier = modifier
     ) {
         LazyColumn(
-            modifier = Modifier.padding(it)
+            modifier = Modifier
+                .padding(it)
+                .padding(horizontal = 16.dp)
         ) {
-            item { Button(onClick = onRequestRoute) { Text(text = "확인") } }
-            item { Text(text = "현위치") }
             item {
-                Row {
-                    Checkbox(checked = uiState.item.isOrdered, onCheckedChange = { onItemValueChanged(uiState.item.copy(isOrdered = it)) })
-                    Text(text = "순서 중요")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Sharp.NearMe,
+                        contentDescription = null
+                    )
+                    TextField(
+                        value = uiState.item.currentAddress,
+                        onValueChange = {},
+                        enabled = false,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
             itemsIndexed(items = uiState.item.layovers, key = { index, item -> index }) { index, value ->
-                Row {
-                    TextField(
-                        value = value,
-                        onValueChange = {
-                            val layovers = uiState.item.layovers.toMutableList()
-                            layovers[index] = it
-                            onItemValueChanged(uiState.item.copy(layovers = layovers))
-                        }
-                    )
-                    IconButton(
-                        onClick = {
-                            val layovers = uiState.item.layovers.toMutableList()
-                            layovers.removeAt(index)
-                            onItemValueChanged(uiState.item.copy(layovers = layovers))
-                        }
-                    ) {
-                        Icon(imageVector = Icons.Sharp.RemoveCircle, contentDescription = null)
-                    }
-                }
+                LayoverRow(
+                    value = value,
+                    onItemRemoved = {
+                        val layovers = uiState.item.layovers.toMutableList()
+                        layovers.removeAt(index)
+                        onItemValueChanged(uiState.item.copy(layovers = layovers))
+                    },
+                    onValueChanged = {
+                        val layovers = uiState.item.layovers.toMutableList()
+                        layovers[index] = it
+                        onItemValueChanged(uiState.item.copy(layovers = layovers))
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateItemPlacement()
+                )
             }
             item {
-                Row {
-                    Text(text = uiState.item.selectedQuery?.title ?: "")
-                    IconButton(
-                        onClick = {
-                            val layovers = uiState.item.layovers.toMutableList()
-                            layovers.add("")
-                            onItemValueChanged(uiState.item.copy(layovers = layovers))
-                        }
+                uiState.item.selectedQuery?.let { query ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(imageVector = Icons.Sharp.Add, contentDescription = null)
+                        Icon(
+                            imageVector = Icons.Sharp.Flag,
+                            contentDescription = null
+                        )
+                        TextField(
+                            value = query.title.removeBoldTag(),
+                            onValueChange = {},
+                            colors = TextFieldDefaults.colors(),
+                            enabled = false,
+                            trailingIcon = {
+                                AnimatedVisibility(
+                                    visible = uiState.item.layovers.size < 5,
+                                    enter = fadeIn(tween(700)),
+                                    exit = fadeOut(tween(700))
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            val layovers = uiState.item.layovers.toMutableList()
+                                            layovers.add("")
+                                            onItemValueChanged(uiState.item.copy(layovers = layovers))
+                                        }
+                                    ) {
+                                        Icon(imageVector = Icons.Sharp.Add, contentDescription = null)
+                                    }
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun LayoverRow(
+    modifier: Modifier = Modifier,
+    value: String,
+    onValueChanged: (String) -> Unit,
+    onItemRemoved: () -> Unit,
+    enabled: Boolean = true,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+    ) {
+        IconButton(
+            onClick = {},
+            modifier = Modifier.size(24.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Sharp.DragHandle,
+                contentDescription = null
+            )
+        }
+        TextField(
+            value = value,
+            onValueChange = onValueChanged,
+            enabled = enabled,
+            trailingIcon = {
+                IconButton(
+                    onClick = onItemRemoved
+                ) {
+                    Icon(imageVector = Icons.Sharp.RemoveCircle, contentDescription = null)
+                }
+            },
+            modifier = modifier
+        )
     }
 }
 
@@ -750,7 +959,7 @@ fun HistorySheetContent(
                 navigationIcon = {
                     AdaptiveBackButton { onItemValueChanged(uiState.item.copy(sheetType = SheetType.SEARCH)) }
                 },
-                title = { Text(text = "History") },
+                title = { AdaptiveText(text = "History") },
             )
         },
         modifier = modifier
@@ -786,7 +995,7 @@ fun HistoryList(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
+            AdaptiveText(
                 text = stringResource(when (pair.first) {
                     HistoryGroup.TODAY -> Res.string.today
                     HistoryGroup.YESTERDAY -> Res.string.yesterday
