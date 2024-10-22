@@ -3,8 +3,11 @@ package zone.ien.map.ui.screens.home.transport
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
@@ -204,7 +207,7 @@ data class TransportDetails @OptIn(ExperimentalMaterial3Api::class) constructor(
 
     val currentAddress: String = "",
     val currentLatLng: Pair<Double, Double> = Pair(0.0, 0.0),
-    val layovers: List<String> = listOf(),
+    val layovers: SnapshotStateList<Pair<Long, String>> = mutableStateListOf()
 //    val markers: List<Pair<Double, Double>> = listOf()
 )
 

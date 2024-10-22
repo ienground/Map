@@ -1,20 +1,18 @@
 package zone.ien.map.ui.screens.home.transport
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.with
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +27,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.sharp.Add
 import androidx.compose.material.icons.sharp.Bookmark
@@ -65,8 +65,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -84,24 +82,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
-import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
+import com.sunnychung.lib.multiplatform.kdatetime.KZonedDateTime
 import com.valentinilk.shimmer.shimmer
 import io.github.alexzhirkevich.cupertino.CupertinoBottomSheetDefaults
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import map.composeapp.generated.resources.Res
 import map.composeapp.generated.resources.add
@@ -124,6 +121,8 @@ import zone.ien.map.data.QueryResult
 import zone.ien.map.data.favorite.Favorite
 import zone.ien.map.ui.AppViewModelProvider
 import zone.ien.map.ui.navigation.NavigationDestination
+import zone.ien.map.ui.utils.move
+import zone.ien.map.ui.utils.rememberDragDropListState
 import zone.ien.map.ui.utils.view.AdaptiveBackButton
 import zone.ien.map.ui.utils.view.AdaptiveText
 import zone.ien.map.utils.Dlog
@@ -133,6 +132,7 @@ import zone.ien.map.utils.diffToString
 import zone.ien.map.utils.groupByTime
 import zone.ien.map.utils.maps.MapScreen
 import zone.ien.map.utils.measure
+import zone.ien.map.utils.now
 import zone.ien.map.utils.removeBoldTag
 import zone.ien.map.utils.safeSubList
 import zone.ien.map.utils.timeInMillis
@@ -804,6 +804,14 @@ fun RouteSheetContent(
     onItemValueChanged: (TransportDetails) -> Unit,
     onRequestRoute: () -> Unit,
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    var overscrollJob by mutableStateOf<Job?>(null)
+    val state = rememberDragDropListState { from, to -> uiState.item.layovers.move(from, to) }
+    val textFieldColors = TextFieldDefaults.colors(
+        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
     Scaffold(
         topBar = {
             TopAppBar(
@@ -825,10 +833,12 @@ fun RouteSheetContent(
         modifier = modifier
     ) {
         LazyColumn(
+            state = state.state,
             modifier = Modifier
                 .padding(it)
                 .padding(horizontal = 16.dp)
         ) {
+            /*
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -843,26 +853,49 @@ fun RouteSheetContent(
                         value = uiState.item.currentAddress,
                         onValueChange = {},
                         enabled = false,
+                        colors = textFieldColors,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
+
+             */
             itemsIndexed(items = uiState.item.layovers, key = { index, item -> index }) { index, value ->
                 LayoverRow(
-                    value = value,
+                    value = value.second,
                     onItemRemoved = {
-                        val layovers = uiState.item.layovers.toMutableList()
+                        val layovers = uiState.item.layovers
                         layovers.removeAt(index)
                         onItemValueChanged(uiState.item.copy(layovers = layovers))
                     },
                     onValueChanged = {
-                        val layovers = uiState.item.layovers.toMutableList()
-                        layovers[index] = it
+                        val layovers = uiState.item.layovers
+                        layovers[index] = Pair(value.first, it)
                         onItemValueChanged(uiState.item.copy(layovers = layovers))
+                    },
+                    onDragGestures = {
+                        detectDragGestures(
+                            onDrag = { change, offset ->
+                                change.consume()
+                                state.onDrag(offset)
+//                                if (overscrollJob?.isActive == true) return@detectDragGestures
+//                                state.checkForOverScroll().takeIf { it != 0f }?.let {
+//                                    overscrollJob = coroutineScope.launch { state.state.scrollBy(it) }
+//                                } ?: run { overscrollJob?.cancel() }
+                            },
+                            onDragStart = { offset -> state.onDragStart(index) },
+                            onDragEnd = { state.onDragEnd() },
+                            onDragCancel = { state.onDragEnd() }
+                        )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .animateItemPlacement()
+                        .zIndex(if (index == state.currentIndexOfDraggedItem) 1f else 0f)
+                        .graphicsLayer {
+                            translationY = state.elementDisplacement.takeIf { index == state.currentIndexOfDraggedItem } ?: 0f
+//                            shadowElevation = 4.dp.toPx().takeIf { index == state.currentIndexOfDraggedItem } ?: 0f
+                        }
                 )
             }
             item {
@@ -879,7 +912,7 @@ fun RouteSheetContent(
                         TextField(
                             value = query.title.removeBoldTag(),
                             onValueChange = {},
-                            colors = TextFieldDefaults.colors(),
+                            colors = textFieldColors,
                             enabled = false,
                             trailingIcon = {
                                 AnimatedVisibility(
@@ -889,8 +922,8 @@ fun RouteSheetContent(
                                 ) {
                                     IconButton(
                                         onClick = {
-                                            val layovers = uiState.item.layovers.toMutableList()
-                                            layovers.add("")
+                                            val layovers = uiState.item.layovers
+                                            layovers.add(Pair(KZonedDateTime.now().timeInMillis(), ""))
                                             onItemValueChanged(uiState.item.copy(layovers = layovers))
                                         }
                                     ) {
@@ -914,6 +947,7 @@ fun LayoverRow(
     onValueChanged: (String) -> Unit,
     onItemRemoved: () -> Unit,
     enabled: Boolean = true,
+    onDragGestures: suspend PointerInputScope.() -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -922,7 +956,11 @@ fun LayoverRow(
     ) {
         IconButton(
             onClick = {},
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier
+                .size(24.dp)
+                .pointerInput(Unit) {
+                    onDragGestures()
+                }
         ) {
             Icon(
                 imageVector = Icons.Sharp.DragHandle,
@@ -933,6 +971,8 @@ fun LayoverRow(
             value = value,
             onValueChange = onValueChanged,
             enabled = enabled,
+            maxLines = 1,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
             trailingIcon = {
                 IconButton(
                     onClick = onItemRemoved
@@ -940,7 +980,7 @@ fun LayoverRow(
                     Icon(imageVector = Icons.Sharp.RemoveCircle, contentDescription = null)
                 }
             },
-            modifier = modifier
+            modifier = Modifier.weight(1f)
         )
     }
 }
