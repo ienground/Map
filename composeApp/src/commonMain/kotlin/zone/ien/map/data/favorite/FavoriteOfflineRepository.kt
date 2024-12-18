@@ -9,6 +9,8 @@ class FavoriteOfflineRepository(private val dao: FavoriteDao): FavoriteRepositor
 
     override fun getSize(): Flow<Int> = dao.getSize()
 
+    override fun getByCoordinate(latitude: Double, longitude: Double): Flow<Favorite?> = dao.getByCoordinate(latitude, longitude)
+
     override suspend fun upsert(data: Favorite) = dao.upsert(data)
 
     override suspend fun delete(data: Favorite) = dao.delete(data)

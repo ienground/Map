@@ -1,0 +1,39 @@
+{
+  "response": {
+    "service": {
+      "name": "search",
+      "version": "2.0",
+      "operation": "search",
+      "time": "20(ms)"
+    },
+    "status": "OK",
+    "record": {
+      "total": "1357",
+      "current": "10"
+    },
+    "page": {
+      "total": "136",
+      "current": "1",
+      "size": "10"
+    },
+    "result": {
+      "crs": "EPSG:4326",
+      "type": "PLACE",
+      "items": [
+        {
+          "id": "POI01000000E0JOZG",
+          "title": "맘스터치",
+          "category": "비거주복지시설운영업 > 전국아동복지급식(가맹점)정보",
+          "address": {
+            "road": "경기도 의정부시 신흥로 359",
+            "parcel": "경기도 의정부시 가능동 648-17대"
+          },
+          "point": {
+            "x": "127.04245256241802",
+            "y": "37.748411998971676"
+          }
+        }
+      ]
+    }
+  }
+}

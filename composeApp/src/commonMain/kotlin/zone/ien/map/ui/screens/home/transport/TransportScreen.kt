@@ -1,6 +1,7 @@
 package zone.ien.map.ui.screens.home.transport
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -9,10 +10,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,14 +28,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.sharp.Add
 import androidx.compose.material.icons.sharp.Bookmark
+import androidx.compose.material.icons.sharp.BookmarkAdd
+import androidx.compose.material.icons.sharp.BookmarkRemove
 import androidx.compose.material.icons.sharp.Check
 import androidx.compose.material.icons.sharp.Close
+import androidx.compose.material.icons.sharp.DirectionsCar
 import androidx.compose.material.icons.sharp.DragHandle
 import androidx.compose.material.icons.sharp.Flag
 import androidx.compose.material.icons.sharp.History
@@ -51,12 +58,14 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,6 +74,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -74,9 +84,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -93,12 +101,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.sunnychung.lib.multiplatform.kdatetime.KZonedDateTime
 import com.valentinilk.shimmer.shimmer
 import io.github.alexzhirkevich.cupertino.CupertinoBottomSheetDefaults
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import map.composeapp.generated.resources.Res
 import map.composeapp.generated.resources.add
@@ -110,14 +115,20 @@ import map.composeapp.generated.resources.office
 import map.composeapp.generated.resources.query_empty
 import map.composeapp.generated.resources.recent
 import map.composeapp.generated.resources.school
+import map.composeapp.generated.resources.start_guide
 import map.composeapp.generated.resources.this_month
 import map.composeapp.generated.resources.this_week
 import map.composeapp.generated.resources.this_year
 import map.composeapp.generated.resources.today
+import map.composeapp.generated.resources.traffic_comfort
+import map.composeapp.generated.resources.traffic_fast
+import map.composeapp.generated.resources.traffic_free
+import map.composeapp.generated.resources.traffic_optimal
 import map.composeapp.generated.resources.yesterday
 import org.jetbrains.compose.resources.stringResource
-import zone.ien.map.TAG
+import zone.ien.map.constant.MapDirection
 import zone.ien.map.data.QueryResult
+import zone.ien.map.data.RouteResult
 import zone.ien.map.data.favorite.Favorite
 import zone.ien.map.ui.AppViewModelProvider
 import zone.ien.map.ui.navigation.NavigationDestination
@@ -125,12 +136,13 @@ import zone.ien.map.ui.utils.move
 import zone.ien.map.ui.utils.rememberDragDropListState
 import zone.ien.map.ui.utils.view.AdaptiveBackButton
 import zone.ien.map.ui.utils.view.AdaptiveText
-import zone.ien.map.utils.Dlog
 import zone.ien.map.utils.HistoryGroup
 import zone.ien.map.utils.LocationUtils
+import zone.ien.map.utils.MapLatLng
 import zone.ien.map.utils.diffToString
 import zone.ien.map.utils.groupByTime
 import zone.ien.map.utils.maps.MapScreen
+import zone.ien.map.utils.maps.MarkerType
 import zone.ien.map.utils.measure
 import zone.ien.map.utils.now
 import zone.ien.map.utils.removeBoldTag
@@ -142,10 +154,10 @@ object TransportDestination: NavigationDestination {
 }
 
 enum class SheetType {
-    SEARCH, DETAIL, ROUTE, HISTORY
+    SEARCH, DETAIL, ROUTE, PREVIEW, HISTORY
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TransportScreen(
     modifier: Modifier = Modifier,
@@ -154,11 +166,21 @@ fun TransportScreen(
 ) {
     val historyUiStateList by viewModel.historyUiStateList.collectAsState()
     val favoriteUiStateList by viewModel.favoriteUiStateList.collectAsState()
-    val sheetState = rememberBottomSheetScaffoldState()
 
-    LaunchedEffect(Unit) {
-        viewModel.getCurrentLocation()
-    }
+    val sheetState = rememberBottomSheetScaffoldState()
+    val pagerState = rememberPagerState(
+        initialPage = SheetType.SEARCH.ordinal,
+        pageCount = { SheetType.entries.size }
+    )
+    val sheetHeight by animateDpAsState(
+        targetValue = when (viewModel.uiState.item.sheetType) {
+            SheetType.SEARCH -> if (viewModel.uiState.item.searchActive) 800.dp else 514.dp
+            SheetType.DETAIL -> 214.dp
+            SheetType.ROUTE -> 200.dp + 58.dp * viewModel.uiState.item.layovers.size + 48.dp
+            SheetType.PREVIEW -> 200.dp
+            SheetType.HISTORY -> 800.dp
+        },
+    )
 
     LaunchedEffect(sheetState.bottomSheetState.currentValue) {
         viewModel.updateUiState(viewModel.uiState.item.copy(sheetState = sheetState.bottomSheetState.currentValue))
@@ -170,23 +192,69 @@ fun TransportScreen(
         }
     }
 
-    val sheetHeight = animateDpAsState(
-        targetValue = when (viewModel.uiState.item.sheetType) {
-            SheetType.SEARCH -> if (viewModel.uiState.item.searchActive) 800.dp else 514.dp
-            SheetType.DETAIL -> 214.dp
-            SheetType.ROUTE -> 200.dp + 58.dp * viewModel.uiState.item.layovers.size
-//            SheetType.ROUTE -> 800.dp
-            SheetType.HISTORY -> 800.dp
-        },
-    )
+    LaunchedEffect(viewModel.uiState.item.sheetType) {
+        pagerState.animateScrollToPage(viewModel.uiState.item.sheetType.ordinal)
+    }
 
     BottomSheetScaffold(
         scaffoldState = sheetState,
         sheetContent = {
+            HorizontalPager(
+                state = pagerState,
+                userScrollEnabled = false,
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(sheetHeight)
+            ) { page ->
+                when (page) {
+                    SheetType.SEARCH.ordinal -> {
+                        SearchSheetContent(
+                            uiState = viewModel.uiState,
+                            onItemValueChanged = viewModel::updateUiState,
+                            onSearchDestination = viewModel::searchDestination,
+                            sheetState = sheetState,
+                            queryUiState = viewModel.queryUiState,
+                            historyList = historyUiStateList,
+                            favoriteList = favoriteUiStateList
+                        )
+                    }
+                    SheetType.DETAIL.ordinal -> {
+                        DetailSheetContent(
+                            uiState = viewModel.uiState,
+                            onItemValueChanged = viewModel::updateUiState,
+                            favoriteList = favoriteUiStateList.itemList,
+                            onFavoriteUpdated = viewModel::updateFavorite
+                        )
+                    }
+                    SheetType.ROUTE.ordinal -> {
+                        RouteSheetContent(
+                            uiState = viewModel.uiState,
+                            onItemValueChanged = viewModel::updateUiState,
+                            onRequestRoute = viewModel::requestRouteInitial,
+                            getCurrentAddress = viewModel::getCurrentAddress
+                        )
+                    }
+                    SheetType.PREVIEW.ordinal -> {
+                        PreviewSheetContent(
+                            uiState = viewModel.uiState,
+                            onItemValueChanged = viewModel::updateUiState
+                        )
+                    }
+                    SheetType.HISTORY.ordinal -> {
+                        HistorySheetContent(
+                            uiState = viewModel.uiState,
+                            onItemValueChanged = viewModel::updateUiState,
+                            historyList = historyUiStateList
+                        )
+                    }
+                }
+            }
+            /*
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(sheetHeight.value)
+                    .height(sheetHeight)
             ) {
                 androidx.compose.animation.AnimatedVisibility(
                     visible = viewModel.uiState.item.sheetType == SheetType.SEARCH,
@@ -221,7 +289,8 @@ fun TransportScreen(
                     RouteSheetContent(
                         uiState = viewModel.uiState,
                         onItemValueChanged = viewModel::updateUiState,
-                        onRequestRoute = viewModel::requestRoute,
+                        onRequestRoute = viewModel::requestRouteInitial,
+                        getCurrentAddress = viewModel::getCurrentAddress
                     )
                 }
                 androidx.compose.animation.AnimatedVisibility(
@@ -236,6 +305,8 @@ fun TransportScreen(
                     )
                 }
             }
+
+             */
         },
         sheetPeekHeight = 108.dp,
         sheetDragHandle = {
@@ -255,6 +326,7 @@ fun TransportScreen(
     ) {
         TransportScreenBody(
             uiState = viewModel.uiState,
+            onItemValueChanged = viewModel::updateUiState,
             navigateToProfile = navigateToProfile,
             modifier = Modifier.padding(it)
         )
@@ -266,15 +338,26 @@ fun TransportScreen(
 fun TransportScreenBody(
     modifier: Modifier = Modifier,
     uiState: TransportUiState,
+    onItemValueChanged: (TransportDetails) -> Unit,
     navigateToProfile: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Box(
         modifier = modifier
     ) {
         MapScreen(
             currentLatLng = uiState.item.currentLatLng,
-            selectedLatLng = uiState.item.selectedQuery?.let { Pair(it.latitude, it.longitude) },
-//            markers = uiState.item.markers,
+            selectedLatLng = uiState.item.selectedLatLng,
+            onSelectLatLng = { onItemValueChanged(uiState.item.copy(selectedLatLng = it)) },
+            markers = uiState.item.markers,
+            routes = uiState.item.routesFinal,
+            onMapClick = { point, latLng ->
+                val markers = uiState.item.markers
+                markers.find { it.first == MarkerType.SELECTED }?.let { marker -> markers.remove(marker) }
+                markers.add(Triple(MarkerType.SELECTED, latLng.latitude, latLng.longitude))
+                onItemValueChanged(uiState.item.copy(selectedLatLng = MapLatLng(latLng.latitude, latLng.longitude), markers = markers))
+            },
             modifier = Modifier.fillMaxSize()
         )
         Column(
@@ -282,11 +365,16 @@ fun TransportScreenBody(
                 .align(Alignment.TopEnd)
                 .padding(16.dp),
         ) {
-            FilledIconButton(onClick = navigateToProfile) { Icon(imageVector = Icons.Sharp.Person, contentDescription = null) }
-            FilledIconButton(onClick = {}) { Icon(imageVector = Icons.Sharp.LocationOn, contentDescription = null) }
+            FilledTonalIconButton(onClick = navigateToProfile) { Icon(imageVector = Icons.Sharp.Person, contentDescription = null) }
+            FilledTonalIconButton(
+                onClick = {
+                    val markers = uiState.item.markers
+                    markers.find { it.first == MarkerType.SELECTED }?.let { marker -> markers.remove(marker) }
+                    onItemValueChanged(uiState.item.copy(selectedLatLng = uiState.item.currentLatLng, markers = markers))
+                }
+            ) { Icon(imageVector = Icons.Sharp.LocationOn, contentDescription = null) }
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -391,7 +479,12 @@ fun SearchSheetContent(
                             SearchRow(
                                 uiState = uiState,
                                 query = item,
-                                onClick = { onItemValueChanged(uiState.item.copy(currentLatLng = Pair(item.latitude, item.longitude), selectedQuery = item, sheetType = SheetType.DETAIL)) },
+                                onClick = {
+                                    val markers = uiState.item.markers
+                                    markers.find { it.first == MarkerType.SELECTED }?.let { marker -> markers.remove(marker) }
+                                    markers.add(Triple(MarkerType.SELECTED, item.latitude, item.longitude))
+                                    onItemValueChanged(uiState.item.copy(markers = markers, selectedLatLng = MapLatLng(item.latitude, item.longitude), selectedQuery = item, sheetType = SheetType.DETAIL))
+                                },
                                 modifier = Modifier.animateItemPlacement()
                             )
                             if (index != queryUiState.itemList.size - 1) {
@@ -485,8 +578,10 @@ fun SearchSheetContent(
                                 .clip(shape)
                                 .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .clickable {
-                                    onItemValueChanged(uiState.item.copy(selectedQuery = QueryResult(title = item.label, address = item.address, latitude = item.latitude, longitude = item.longitude), sheetType = SheetType.DETAIL)
-                                    )
+                                    val markers = uiState.item.markers
+                                    markers.find { it.first == MarkerType.SELECTED }?.let { marker -> markers.remove(marker) }
+                                    markers.add(Triple(MarkerType.SELECTED, item.latitude, item.longitude))
+                                    onItemValueChanged(uiState.item.copy(markers = markers, selectedLatLng = MapLatLng(item.latitude, item.longitude), selectedQuery = QueryResult(title = item.label, address = item.address, latitude = item.latitude, longitude = item.longitude), sheetType = SheetType.DETAIL))
                                 }
                         )
                         if (index != historyList.itemList.size - 1 && index != 2) {
@@ -555,7 +650,7 @@ fun FavoriteRow(
             modifier = Modifier.padding(top = 4.dp)
         )
         AdaptiveText(
-            text = if (item.id != -1L) LocationUtils.measure(uiState.item.currentLatLng, Pair(item.latitude, item.longitude)).diffToString() else stringResource(Res.string.add),
+            text = if (item.id != -1L) LocationUtils.measure(uiState.item.currentLatLng, MapLatLng(item.latitude, item.longitude)).diffToString() else stringResource(Res.string.add),
             fontSize = 12.sp
         )
     }
@@ -640,8 +735,6 @@ fun SearchRow(
     query: QueryResult,
     onClick: () -> Unit
 ) {
-    val richTextState = rememberRichTextState()
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -655,8 +748,9 @@ fun SearchRow(
             modifier = Modifier.weight(1f)
         ) {
             Row {
-                RichText(
-                    state = richTextState.setHtml(query.title),
+                AdaptiveText(
+                    text = query.title,
+                    maxLines = 1,
                     modifier = Modifier.weight(1f)
                 )
                 AdaptiveText(
@@ -666,10 +760,11 @@ fun SearchRow(
             Row {
                 AdaptiveText(
                     text = query.address,
+                    maxLines = 1,
                     modifier = Modifier.weight(1f)
                 )
                 AdaptiveText(
-                    text = LocationUtils.measure(uiState.item.currentLatLng, Pair(query.latitude, query.longitude)).diffToString()
+                    text = LocationUtils.measure(uiState.item.currentLatLng, MapLatLng(query.latitude, query.longitude)).diffToString()
                 )
             }
 
@@ -735,8 +830,12 @@ fun SearchRowShimmer(
 fun DetailSheetContent(
     modifier: Modifier = Modifier,
     uiState: TransportUiState,
-    onItemValueChanged: (TransportDetails) -> Unit
+    onItemValueChanged: (TransportDetails) -> Unit,
+    favoriteList: List<FavoriteDetails>,
+    onFavoriteUpdated: (QueryResult) -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -765,9 +864,18 @@ fun DetailSheetContent(
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        AdaptiveText(
-                            text = query.address
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            AdaptiveText(
+                                text = LocationUtils.measure(uiState.item.currentLatLng, MapLatLng(query.latitude, query.longitude)).diffToString(),
+                                fontWeight = FontWeight.Bold
+                            )
+                            AdaptiveText(
+                                text = query.address
+                            )
+                        }
                     }
                     FilledTonalButton(
                         onClick = {
@@ -786,9 +894,9 @@ fun DetailSheetContent(
                 ) {
                     Button(
                         colors = ButtonDefaults.buttonColors(),
-                        onClick = {}
+                        onClick = { coroutineScope.launch { onFavoriteUpdated(query) } }
                     ) {
-                        Icon(imageVector = Icons.Sharp.Bookmark, contentDescription = null)
+                        Icon(imageVector = if (favoriteList.firstOrNull { it.latitude == query.latitude && it.longitude == query.longitude } == null) Icons.Sharp.BookmarkAdd else Icons.Sharp.BookmarkRemove, contentDescription = null)
                     }
                 }
             }
@@ -802,16 +910,20 @@ fun RouteSheetContent(
     modifier: Modifier = Modifier,
     uiState: TransportUiState,
     onItemValueChanged: (TransportDetails) -> Unit,
-    onRequestRoute: () -> Unit,
+    onRequestRoute: (MapLatLng) -> Unit,
+    getCurrentAddress: suspend () -> Unit
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    var overscrollJob by mutableStateOf<Job?>(null)
     val state = rememberDragDropListState { from, to -> uiState.item.layovers.move(from, to) }
+    val chipState = rememberScrollState()
     val textFieldColors = TextFieldDefaults.colors(
         disabledTextColor = MaterialTheme.colorScheme.onSurface,
         disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
         disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
     )
+    LaunchedEffect(Unit) {
+        getCurrentAddress()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -819,10 +931,13 @@ fun RouteSheetContent(
                     AdaptiveBackButton { onItemValueChanged(uiState.item.copy(sheetType = SheetType.DETAIL)) }
                 },
                 actions = {
+                    /*
                     AdaptiveText(text = "순서 중요")
                     Checkbox(checked = uiState.item.isOrdered, onCheckedChange = { onItemValueChanged(uiState.item.copy(isOrdered = it)) })
+
+                     */
                     IconButton(
-                        onClick = onRequestRoute
+                        onClick = { uiState.item.selectedQuery?.let { query -> onRequestRoute(MapLatLng(query.latitude, query.longitude)) } }
                     ) {
                         Icon(imageVector = Icons.Sharp.Check, contentDescription = null)
                     }
@@ -832,109 +947,142 @@ fun RouteSheetContent(
         },
         modifier = modifier
     ) {
-        LazyColumn(
-            state = state.state,
-            modifier = Modifier
-                .padding(it)
-                .padding(horizontal = 16.dp)
+        Column(
+            modifier = Modifier.padding(it)
         ) {
-            /*
-            item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Sharp.NearMe,
+                    contentDescription = null
+                )
+                TextField(
+                    value = uiState.item.currentRoadAddress.ifEmpty { uiState.item.currentAddress },
+                    onValueChange = {},
+                    enabled = false,
+                    colors = textFieldColors,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            LazyColumn(
+                state = state.state,
+                modifier = Modifier
+            ) {
+                itemsIndexed(items = uiState.item.layovers, key = { index, item -> index }) { index, value ->
+                    LayoverRow(
+                        value = value.second,
+                        onItemRemoved = {
+                            val layovers = uiState.item.layovers
+                            layovers.removeAt(index)
+                            onItemValueChanged(uiState.item.copy(layovers = layovers))
+                        },
+                        onValueChanged = {
+                            val layovers = uiState.item.layovers
+                            layovers[index] = Pair(value.first, it)
+                            onItemValueChanged(uiState.item.copy(layovers = layovers))
+                        },
+                        onDragGestures = {
+                            detectDragGestures(
+                                onDrag = { change, offset ->
+                                    change.consume()
+                                    state.onDrag(offset)
+                                },
+                                onDragStart = { offset -> state.onDragStart(index) },
+                                onDragEnd = { state.onDragEnd() },
+                                onDragCancel = { state.onDragEnd() }
+                            )
+                        },
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .animateItemPlacement()
+                            .zIndex(if (index == state.currentIndexOfDraggedItem) 1f else 0f)
+                            .graphicsLayer {
+                                translationY = state.elementDisplacement.takeIf { index == state.currentIndexOfDraggedItem } ?: 0f
+                            }
+                    )
+                }
+            }
+            uiState.item.selectedQuery?.let { query ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
                 ) {
                     Icon(
-                        imageVector = Icons.Sharp.NearMe,
+                        imageVector = Icons.Sharp.Flag,
                         contentDescription = null
                     )
                     TextField(
-                        value = uiState.item.currentAddress,
+                        value = query.title.removeBoldTag(),
                         onValueChange = {},
-                        enabled = false,
                         colors = textFieldColors,
+                        enabled = false,
+                        trailingIcon = {
+                            AnimatedVisibility(
+                                visible = uiState.item.layovers.size < 1,
+                                enter = fadeIn(tween(700)),
+                                exit = fadeOut(tween(700))
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        val layovers = uiState.item.layovers
+                                        layovers.add(Pair(KZonedDateTime.now().timeInMillis(), ""))
+                                        onItemValueChanged(uiState.item.copy(layovers = layovers))
+                                    }
+                                ) {
+                                    Icon(imageVector = Icons.Sharp.Add, contentDescription = null)
+                                }
+                            }
+                        },
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
-
-             */
-            itemsIndexed(items = uiState.item.layovers, key = { index, item -> index }) { index, value ->
-                LayoverRow(
-                    value = value.second,
-                    onItemRemoved = {
-                        val layovers = uiState.item.layovers
-                        layovers.removeAt(index)
-                        onItemValueChanged(uiState.item.copy(layovers = layovers))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .horizontalScroll(state = chipState)
+                    .padding(top = 16.dp)
+                    .fillMaxWidth()
+            ) {
+                FilterChip(
+                    onClick = { onItemValueChanged(uiState.item.copy(trafficOption = MapDirection.TrafficOption.OPTIMAL)) },
+                    selected = uiState.item.trafficOption == MapDirection.TrafficOption.OPTIMAL,
+                    label = {
+                        Text(text = stringResource(Res.string.traffic_optimal))
                     },
-                    onValueChanged = {
-                        val layovers = uiState.item.layovers
-                        layovers[index] = Pair(value.first, it)
-                        onItemValueChanged(uiState.item.copy(layovers = layovers))
-                    },
-                    onDragGestures = {
-                        detectDragGestures(
-                            onDrag = { change, offset ->
-                                change.consume()
-                                state.onDrag(offset)
-//                                if (overscrollJob?.isActive == true) return@detectDragGestures
-//                                state.checkForOverScroll().takeIf { it != 0f }?.let {
-//                                    overscrollJob = coroutineScope.launch { state.state.scrollBy(it) }
-//                                } ?: run { overscrollJob?.cancel() }
-                            },
-                            onDragStart = { offset -> state.onDragStart(index) },
-                            onDragEnd = { state.onDragEnd() },
-                            onDragCancel = { state.onDragEnd() }
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateItemPlacement()
-                        .zIndex(if (index == state.currentIndexOfDraggedItem) 1f else 0f)
-                        .graphicsLayer {
-                            translationY = state.elementDisplacement.takeIf { index == state.currentIndexOfDraggedItem } ?: 0f
-//                            shadowElevation = 4.dp.toPx().takeIf { index == state.currentIndexOfDraggedItem } ?: 0f
-                        }
+                    modifier = Modifier.padding(start = 16.dp)
                 )
-            }
-            item {
-                uiState.item.selectedQuery?.let { query ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Sharp.Flag,
-                            contentDescription = null
-                        )
-                        TextField(
-                            value = query.title.removeBoldTag(),
-                            onValueChange = {},
-                            colors = textFieldColors,
-                            enabled = false,
-                            trailingIcon = {
-                                AnimatedVisibility(
-                                    visible = uiState.item.layovers.size < 5,
-                                    enter = fadeIn(tween(700)),
-                                    exit = fadeOut(tween(700))
-                                ) {
-                                    IconButton(
-                                        onClick = {
-                                            val layovers = uiState.item.layovers
-                                            layovers.add(Pair(KZonedDateTime.now().timeInMillis(), ""))
-                                            onItemValueChanged(uiState.item.copy(layovers = layovers))
-                                        }
-                                    ) {
-                                        Icon(imageVector = Icons.Sharp.Add, contentDescription = null)
-                                    }
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
+                FilterChip(
+                    onClick = { onItemValueChanged(uiState.item.copy(trafficOption = MapDirection.TrafficOption.FAST)) },
+                    selected = uiState.item.trafficOption == MapDirection.TrafficOption.FAST,
+                    label = {
+                        Text(text = stringResource(Res.string.traffic_fast))
+                    },
+                )
+                FilterChip(
+                    onClick = { onItemValueChanged(uiState.item.copy(trafficOption = MapDirection.TrafficOption.FREE)) },
+                    selected = uiState.item.trafficOption == MapDirection.TrafficOption.FREE,
+                    label = {
+                        Text(text = stringResource(Res.string.traffic_free))
+                    },
+                )
+                FilterChip(
+                    onClick = { onItemValueChanged(uiState.item.copy(trafficOption = MapDirection.TrafficOption.COMFORT)) },
+                    selected = uiState.item.trafficOption == MapDirection.TrafficOption.COMFORT,
+                    label = {
+                        Text(text = stringResource(Res.string.traffic_comfort))
+                    },
+                    modifier = Modifier.padding(end = 16.dp)
+                )
             }
         }
     }
@@ -982,6 +1130,109 @@ fun LayoverRow(
             },
             modifier = Modifier.weight(1f)
         )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun PreviewSheetContent(
+    modifier: Modifier = Modifier,
+    uiState: TransportUiState,
+    onItemValueChanged: (TransportDetails) -> Unit
+) {
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { 3 }
+//        pageCount = { uiState.item.routesCandidates.size }
+    )
+
+    LaunchedEffect(pagerState.currentPage) {
+        onItemValueChanged(uiState.item.copy(selectedCandidates = pagerState.currentPage))
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("hi")
+                }
+            )
+        },
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(it)
+        ) {
+            Box(
+                modifier = Modifier
+            ) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = uiState.item.routesCandidates.isEmpty(),
+                    enter = fadeIn(tween(700)),
+                    exit = fadeOut(tween(700))
+                ) {
+
+                }
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = uiState.item.routesCandidates.isNotEmpty(),
+                    enter = fadeIn(tween(700)),
+                    exit = fadeOut(tween(700))
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) { page ->
+                        uiState.item.routesCandidates[page]?.first?.let { route ->
+                            RouteCandidateRow(
+                                route = route,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+@Composable
+fun RouteCandidateRow(
+    modifier: Modifier = Modifier,
+    route: RouteResult
+) {
+    Card(
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Column {
+                AdaptiveText(
+                    text = route.waypoint
+                )
+                Row {
+                    AdaptiveText(
+                        text = route.duration.toString()
+                    )
+
+
+                }
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                FilledIconButton(
+                    onClick = {}
+                ) {
+                    Icon(imageVector = Icons.Sharp.DirectionsCar, contentDescription = null)
+                    AdaptiveText(text = stringResource(Res.string.start_guide))
+                }
+            }
+        }
     }
 }
 
@@ -1068,6 +1319,7 @@ fun HistoryList(
                         .clip(shape)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable {
+
                         }
                 )
                 if (index != pair.second.size - 1) {

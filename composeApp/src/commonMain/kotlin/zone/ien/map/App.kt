@@ -31,6 +31,7 @@ const val TAG = "LayoveroadTAG"
 fun App() {
     GeneratedAdaptiveTheme(
         target = zone.ien.map.ui.theme.AdaptiveTheme,
+        useDynamicColor = false
     ) {
         AdaptiveScaffold(
             contentWindowInsets = WindowInsets(0.dp)

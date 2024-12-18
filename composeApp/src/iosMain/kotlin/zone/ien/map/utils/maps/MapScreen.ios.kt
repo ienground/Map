@@ -24,15 +24,20 @@ import platform.UIKit.UIViewController
 
 import zone.ien.map.TAG
 import zone.ien.map.utils.Dlog
+import zone.ien.map.utils.MapLatLng
+import zone.ien.map.utils.MapPointF
 import zone.ien.map.utils.SwiftUIFactory
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun MapScreen(
     modifier: Modifier,
-    currentLatLng: Pair<Double, Double>,
-    selectedLatLng: Pair<Double, Double>?
-//    markers: List<Pair<Double, Double>>
+    currentLatLng: MapLatLng,
+    selectedLatLng: MapLatLng,
+    onSelectLatLng: (MapLatLng) -> Unit,
+    markers: List<Triple<Int, Double, Double>>,
+    routes: List<MapLatLng>,
+    onMapClick: (MapPointF, MapLatLng) -> Unit,
 ) {
     Dlog.i(TAG, "${SwiftUIFactory.shared}")
     Text("hello map")

@@ -22,4 +22,7 @@ interface FavoriteDao {
 
     @Query("SELECT COUNT(*) FROM Favorite")
     fun getSize(): Flow<Int>
+
+    @Query("SELECT * FROM Favorite WHERE latitude = :latitude AND longitude = :longitude")
+    fun getByCoordinate(latitude: Double, longitude: Double): Flow<Favorite?>
 }

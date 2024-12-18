@@ -9,6 +9,8 @@ interface FavoriteRepository {
 
     fun getSize(): Flow<Int>
 
+    fun getByCoordinate(latitude: Double, longitude: Double): Flow<Favorite?>
+
     suspend fun upsert(data: Favorite): Long
 
     suspend fun delete(data: Favorite)

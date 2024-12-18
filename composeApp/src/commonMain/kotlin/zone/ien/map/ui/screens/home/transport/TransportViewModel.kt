@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
@@ -17,20 +16,18 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.URLBuilder
-import io.ktor.http.encodeURLParameter
-import io.ktor.http.headers
-import io.ktor.util.toMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.double
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -39,8 +36,9 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import zone.ien.map.TAG
 import zone.ien.map.constant.ApiKey
-import zone.ien.map.constant.Pref
+import zone.ien.map.constant.MapDirection
 import zone.ien.map.data.QueryResult
+import zone.ien.map.data.RouteResult
 import zone.ien.map.data.favorite.Favorite
 import zone.ien.map.data.favorite.FavoriteRepository
 import zone.ien.map.data.history.History
@@ -48,9 +46,11 @@ import zone.ien.map.data.history.HistoryRepository
 import zone.ien.map.datastore.DEFAULT_DATASTORE
 import zone.ien.map.utils.Dlog
 import zone.ien.map.utils.LocationUtils
-import zone.ien.map.utils.measure
+import zone.ien.map.utils.MapLatLng
+import zone.ien.map.utils.extractRepresentativeCoordinatesByCount
 import zone.ien.map.utils.now
 import zone.ien.map.utils.toAddress
+import zone.ien.map.utils.toRoadAddress
 
 @OptIn(ExperimentalMaterial3Api::class)
 class TransportViewModel(
@@ -88,12 +88,15 @@ class TransportViewModel(
 
     init {
         viewModelScope.launch {
+            getCurrentLocation()
             dataStore.data.collect {
-                val currentLatitude = it[Pref.Key.CURRENT_LATITUDE] ?: 0.0
-                val currentLongitude = it[Pref.Key.CURRENT_LONGITUDE] ?: 0.0
+//                val currentLatitude = it[Pref.Key.CURRENT_LATITUDE] ?: 0.0
+//                val currentLongitude = it[Pref.Key.CURRENT_LONGITUDE] ?: 0.0
 
-                updateUiState(uiState.item.copy(currentLatLng = Pair(currentLatitude, currentLongitude)))
-                getAddress(currentLatitude, currentLongitude)
+//                Dlog.d(TAG, "update current latLng: ${currentLatitude} ${currentLongitude}, ${uiState.item.currentUpdateCount}")
+
+//                updateUiState(uiState.item.copy(currentLatLng = MapLatLng(currentLatitude, currentLongitude), currentUpdateCount = uiState.item.currentUpdateCount + 1))
+//                getCurrentAddress(currentLatitude, currentLongitude)
             }
         }
     }
@@ -103,10 +106,15 @@ class TransportViewModel(
     }
 
     fun getCurrentLocation() {
-        LocationUtils.getCurrentLocation()
+        LocationUtils.getCurrentLocation {
+            if (!uiState.item.isCurrentInitialized) {
+                updateUiState(uiState.item.copy(selectedLatLng = it))
+            }
+            updateUiState(uiState.item.copy(currentLatLng = it, isCurrentInitialized = true))
+        }
     }
 
-    fun getAddress(latitude: Double, longitude: Double) {
+    fun getSelectedAddress(latitude: Double, longitude: Double) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = client.get("https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${longitude}%2C${latitude}&output=json&orders=addr%2Croadaddr") {
@@ -114,10 +122,25 @@ class TransportViewModel(
                     header("x-ncp-apigw-api-key", ApiKey.NAVER_MAP_CLIENT_KEY)
                 }
                 val result = Json.decodeFromString<JsonObject>(response.bodyAsText())["results"]?.jsonArray
-                updateUiState(uiState.item.copy(currentAddress = result?.toAddress() ?: ""))
+                updateUiState(uiState.item.copy(selectedRoadAddress = result?.toRoadAddress() ?: ""))
+                updateUiState(uiState.item.copy(selectedAddress = result?.toAddress() ?: ""))
             } catch (e: Exception) {
                 Dlog.e(TAG, "error: ${e}")
             }
+        }
+    }
+
+    suspend fun getCurrentAddress() {
+        try {
+            val response = client.get("https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${uiState.item.currentLatLng.longitude}%2C${uiState.item.currentLatLng.latitude}&output=json&orders=addr%2Croadaddr") {
+                header("x-ncp-apigw-api-key-id", ApiKey.NAVER_MAP_CLIENT_KEY_ID)
+                header("x-ncp-apigw-api-key", ApiKey.NAVER_MAP_CLIENT_KEY)
+            }
+            val result = Json.decodeFromString<JsonObject>(response.bodyAsText())["results"]?.jsonArray
+            updateUiState(uiState.item.copy(currentRoadAddress = result?.toRoadAddress() ?: "", currentAddress = result?.toAddress() ?: ""))
+            Dlog.d(TAG, "getCurrentAddress: ${uiState.item.currentAddress} ${uiState.item.currentRoadAddress}")
+        } catch (e: Exception) {
+            Dlog.e(TAG, "error: ${e}")
         }
     }
 
@@ -125,22 +148,23 @@ class TransportViewModel(
     fun searchDestination(query: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                getCurrentAddress()
                 queryUiState = TransportQueryUiState(isInitialized = false, itemList = listOf())
-                val response = client.get("https://openapi.naver.com/v1/search/local.json?query=${query.encodeURLParameter()}&display=10&start=5&sort=random") {
-                    header("X-Naver-Client-Id", ApiKey.NAVER_CLIENT_ID)
-                    header("X-Naver-Client-Secret", ApiKey.NAVER_CLIENT_SECRET)
-                }
-                val result = Json.decodeFromString<JsonObject>(response.bodyAsText())["items"]?.jsonArray?.map {
-                    val jsonObject = it.jsonObject
-                    val title = jsonObject["title"]?.jsonPrimitive?.content ?: ""
-                    val category = jsonObject["category"]?.jsonPrimitive?.content ?: ""
-                    val telephone = jsonObject["telephone"]?.jsonPrimitive?.content ?: ""
-                    val address = jsonObject["address"]?.jsonPrimitive?.content ?: ""
-                    val roadAddress = jsonObject["roadAddress"]?.jsonPrimitive?.content ?: ""
-                    val latitude = jsonObject["mapy"]?.jsonPrimitive?.int?.div(10000000.0) ?: 0.0
-                    val longitude = jsonObject["mapx"]?.jsonPrimitive?.int?.div(10000000.0) ?: 0.0
 
-                    QueryResult(title = title, categories = category.split(">"), telephone = telephone, address = address, roadAddress = roadAddress, latitude = latitude, longitude = longitude)
+                val response = client.get("https://dapi.kakao.com/v2/local/search/keyword.JSON?query=${query}&x=${uiState.item.currentLatLng.longitude}&y=${uiState.item.currentLatLng.latitude}&sort=accuracy&page=1&size=15") {
+                    header("Authorization", ApiKey.KAKAO_API_KEY)
+                }
+
+                val result = Json.decodeFromString<JsonObject>(response.bodyAsText())["documents"]?.jsonArray?.map {
+                    val jsonObject = it.jsonObject
+                    val title = jsonObject["place_name"]?.jsonPrimitive?.content ?: ""
+                    val category = jsonObject["category_group_name"]?.jsonPrimitive?.content ?: ""
+                    val address = jsonObject["address_name"]?.jsonPrimitive?.content ?: ""
+                    val roadAddress = jsonObject["road_address_name"]?.jsonPrimitive?.content ?: ""
+                    val latitude = jsonObject["y"]?.jsonPrimitive?.content?.toDouble() ?: 0.0
+                    val longitude = jsonObject["x"]?.jsonPrimitive?.content?.toDouble() ?: 0.0
+
+                    QueryResult(title = title, categories = category.split(">"), address = address, roadAddress = roadAddress, latitude = latitude, longitude = longitude)
                 }
 
                 queryUiState = TransportQueryUiState(isInitialized = true, itemList = result ?: listOf())
@@ -151,7 +175,7 @@ class TransportViewModel(
         }
     }
 
-    fun requestRoute() {
+    fun requestRouteInitial(goal: MapLatLng) {
         // 저장
         CoroutineScope(Dispatchers.IO).launch {
             uiState.item.selectedQuery?.let { query ->
@@ -164,12 +188,111 @@ class TransportViewModel(
                     historyRepository.upsert(item.apply { this.id = id })
                 }
             }
+
+            // 경로 요청
+            val response = client.get("https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?goal=${goal.longitude}%2C${goal.latitude}&start=${uiState.item.currentLatLng.longitude}%2C${uiState.item.currentLatLng.latitude}&option=${uiState.item.trafficOption}") {
+                header("x-ncp-apigw-api-key-id", ApiKey.NAVER_MAP_CLIENT_KEY_ID)
+                header("x-ncp-apigw-api-key", ApiKey.NAVER_MAP_CLIENT_KEY)
+            }
+
+            val result = Json.decodeFromString<JsonObject>(response.bodyAsText())["route"]?.jsonObject?.get(uiState.item.trafficOption)?.jsonArray
+
+            if (result?.isNotEmpty() == true) {
+                val summary = result[0].jsonObject["summary"]?.jsonObject
+                val path = result[0].jsonObject["path"]?.jsonArray?.map { json ->
+                    json.jsonArray.let { MapLatLng(it[1].jsonPrimitive.double, it[0].jsonPrimitive.double) }
+                }
+
+//                Dlog.d(TAG, "summary: ${summary}")
+//                Dlog.d(TAG, "path: ${path}")
+
+                if (path != null) {
+                    val represent = extractRepresentativeCoordinatesByCount(path, 3)
+                    val routes = uiState.item.routesInitial
+                    routes.clear()
+                    routes.addAll(represent)
+                    updateUiState(uiState.item.copy(routesInitial = routes))
+
+                    requestWaypoints(goal)
+                }
+            }
         }
+    }
 
-        // 경로 요청
+    fun requestWaypoints(goal: MapLatLng) {
+        viewModelScope.launch {
+            if (uiState.item.layovers.isEmpty()) {
 
+            } else {
+                val candidates = uiState.item.routesInitial.mapIndexed { index, latLng ->
+                    val waypointResponse = client.get("https://dapi.kakao.com/v2/local/search/keyword.JSON?query=${uiState.item.layovers.first().second}&x=${latLng.longitude}&y=${latLng.latitude}&sort=accuracy&page=1&size=3") {
+                        header("Authorization", ApiKey.KAKAO_API_KEY)
+                    }
 
-        // 표시
+                    val result = Json.decodeFromString<JsonObject>(waypointResponse.bodyAsText())["documents"]?.jsonArray?.map {
+                        val jsonObject = it.jsonObject
+                        val title = jsonObject["place_name"]?.jsonPrimitive?.content ?: ""
+                        val category = jsonObject["category_group_name"]?.jsonPrimitive?.content ?: ""
+                        val address = jsonObject["address_name"]?.jsonPrimitive?.content ?: ""
+                        val roadAddress = jsonObject["road_address_name"]?.jsonPrimitive?.content ?: ""
+                        val latitude = jsonObject["y"]?.jsonPrimitive?.content?.toDouble() ?: 0.0
+                        val longitude = jsonObject["x"]?.jsonPrimitive?.content?.toDouble() ?: 0.0
+
+                        QueryResult(title = title, categories = category.split(">"), address = address, roadAddress = roadAddress, latitude = latitude, longitude = longitude)
+                    }?.let { if (it.isNotEmpty()) it.first() else null }
+
+                    if (result != null) {
+                        val routeResponse = client.get("https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?goal=${goal.longitude}%2C${goal.latitude}&start=${uiState.item.currentLatLng.longitude}%2C${uiState.item.currentLatLng.latitude}&option=${uiState.item.trafficOption}&waypoints=${result.longitude},${result.latitude}") {
+                            header("x-ncp-apigw-api-key-id", ApiKey.NAVER_MAP_CLIENT_KEY_ID)
+                            header("x-ncp-apigw-api-key", ApiKey.NAVER_MAP_CLIENT_KEY)
+                        }
+
+                        Dlog.d(TAG, "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?goal=${goal.longitude}%2C${goal.latitude}&start=${uiState.item.currentLatLng.longitude}%2C${uiState.item.currentLatLng.latitude}&option=${uiState.item.trafficOption}&waypoints=${result.longitude},${result.latitude}")
+
+                        val routeResult = Json.decodeFromString<JsonObject>(routeResponse.bodyAsText())["route"]?.jsonObject?.get(uiState.item.trafficOption)?.jsonArray
+
+                        if (routeResult?.isNotEmpty() == true) {
+                            val summary = routeResult[0].jsonObject["summary"]?.jsonObject
+                            val path = routeResult[0].jsonObject["path"]?.jsonArray?.map { json ->
+                                json.jsonArray.let { MapLatLng(it[1].jsonPrimitive.double, it[0].jsonPrimitive.double) }
+                            }
+
+                            val distance = summary?.get("distance")?.jsonPrimitive?.int ?: 0
+                            val duration = summary?.get("duration")?.jsonPrimitive?.int ?: 0
+                            val tollFare = summary?.get("tollFare")?.jsonPrimitive?.int ?: 0
+                            val taxiFare = summary?.get("taxiFare")?.jsonPrimitive?.int ?: 0
+
+//                            Dlog.d(TAG, "summary: ${result.title} ${index} ${summary}")
+//                            Dlog.d(TAG, "path: ${path}")
+
+                            Pair(RouteResult(waypoint = result.title, latLng = MapLatLng(result.latitude, result.longitude), distance = distance, duration = duration, tollFare = tollFare, taxiFare = taxiFare), path)
+                        } else null
+                    } else {
+                        Dlog.d(TAG, "null")
+                        null
+                    }
+                }
+
+                updateUiState(item = uiState.item.copy(routesCandidates = candidates, sheetType = SheetType.PREVIEW))
+//                candidates.forEachIndexed { index, pair ->
+//                    Dlog.d(TAG, "${index} ${pair?.first} ${pair?.second}")
+//                }
+            }
+
+        }
+    }
+
+    fun updateFavorite(query: QueryResult) {
+        viewModelScope.launch {
+            val pre = favoriteRepository.getByCoordinate(query.latitude, query.longitude).first()
+            val entity = Favorite(label = query.title, address = query.address, latitude = query.latitude, longitude = query.longitude, type = -1, registerTime = KZonedDateTime.now(), lastUsedTime = KZonedDateTime.now())
+            if (pre == null) {
+                favoriteRepository.upsert(entity)
+            } else {
+                favoriteRepository.delete(pre)
+            }
+
+        }
     }
 
     companion object {
@@ -199,16 +322,28 @@ data class TransportUiState @OptIn(ExperimentalMaterial3Api::class) constructor(
 data class TransportDetails @OptIn(ExperimentalMaterial3Api::class) constructor(
     val query: String = "",
     val searchActive: Boolean = false,
-//    val queryResults: List<QueryResult> = listOf(),
+
     val sheetType: SheetType = SheetType.SEARCH,
     val sheetState: SheetValue = SheetValue.PartiallyExpanded,
     val isOrdered: Boolean = false,
     val selectedQuery: QueryResult? = null,
+    val trafficOption: String = MapDirection.TrafficOption.OPTIMAL,
 
+    val isCurrentInitialized: Boolean = false,
+    val currentRoadAddress: String = "",
     val currentAddress: String = "",
-    val currentLatLng: Pair<Double, Double> = Pair(0.0, 0.0),
-    val layovers: SnapshotStateList<Pair<Long, String>> = mutableStateListOf()
-//    val markers: List<Pair<Double, Double>> = listOf()
+    val currentLatLng: MapLatLng = MapLatLng(0.0, 0.0),
+
+    val selectedRoadAddress: String = "",
+    val selectedAddress: String = "",
+    val selectedLatLng: MapLatLng = MapLatLng(0.0, 0.0),
+
+    val layovers: SnapshotStateList<Pair<Long, String>> = mutableStateListOf(),
+    val markers: SnapshotStateList<Triple<Int, Double, Double>> = mutableStateListOf(),
+    val selectedCandidates: Int = 0,
+    val routesInitial: SnapshotStateList<MapLatLng> = mutableStateListOf(),
+    val routesCandidates: List<Pair<RouteResult, List<MapLatLng>?>?> = listOf(),
+    val routesFinal: SnapshotStateList<MapLatLng> = mutableStateListOf()
 )
 
 data class HistoryDetails(

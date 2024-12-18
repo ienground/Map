@@ -3,15 +3,20 @@ package zone.ien.map.ui.utils.view
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -22,6 +27,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -88,6 +94,55 @@ fun AdaptiveText(
             CupertinoText(text, modifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, minLines, onTextLayout, style ?: io.github.alexzhirkevich.LocalTextStyle.current)
         }
     )
+}
+
+@OptIn(ExperimentalAdaptiveApi::class)
+@Composable
+fun AdaptiveTextShimmer(
+    modifier: Modifier = Modifier,
+    fontSize: TextUnit = TextUnit.Unspecified,
+    fontStyle: FontStyle? = null,
+    fontWeight: FontWeight? = null,
+    fontFamily: FontFamily? = null,
+    letterSpacing: TextUnit = TextUnit.Unspecified,
+    textDecoration: TextDecoration? = null,
+    textAlign: TextAlign = TextAlign.Unspecified,
+    lineHeight: TextUnit = TextUnit.Unspecified,
+    overflow: TextOverflow = TextOverflow.Clip,
+    softWrap: Boolean = true,
+    maxLines: Int = Int.MAX_VALUE,
+    minLines: Int = 1,
+    style: TextStyle? = null
+) {
+    Box(
+        modifier = modifier
+            .width(IntrinsicSize.Min)
+            .height(IntrinsicSize.Min)
+
+    ) {
+        AdaptiveText(
+            text = " ",
+            fontSize = fontSize,
+            fontStyle = fontStyle,
+            fontWeight = fontWeight,
+            fontFamily = fontFamily,
+            letterSpacing = letterSpacing,
+            textDecoration = textDecoration,
+            textAlign = textAlign,
+            lineHeight = lineHeight,
+            overflow = overflow,
+            softWrap = softWrap,
+            maxLines = maxLines,
+            minLines = minLines,
+            style = style
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 3.dp)
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
+        )
+    }
 }
 
 @OptIn(ExperimentalAdaptiveApi::class)
