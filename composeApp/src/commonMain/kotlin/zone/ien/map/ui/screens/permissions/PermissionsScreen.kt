@@ -4,7 +4,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import zone.ien.map.ui.AppViewModelProvider
+import org.koin.compose.viewmodel.koinViewModel
 import zone.ien.map.ui.navigation.NavigationDestination
 
 object PermissionsDestination: NavigationDestination {
@@ -14,7 +14,7 @@ object PermissionsDestination: NavigationDestination {
 @Composable
 fun PermissionsScreen(
     modifier: Modifier = Modifier,
-    viewModel: PermissionsViewModel = viewModel(factory = AppViewModelProvider.factory)
+    viewModel: PermissionsViewModel = koinViewModel()
 ) {
     Text("permissions")
 }

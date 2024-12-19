@@ -1,9 +1,12 @@
 package zone.ien.map.utils.maps
 
 import android.graphics.PointF
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.geometry.LatLngBounds
 import com.naver.maps.map.CameraPosition
@@ -22,12 +25,20 @@ import com.naver.maps.map.compose.NaverMap
 import com.naver.maps.map.compose.PathOverlay
 import com.naver.maps.map.compose.rememberCameraPositionState
 import com.naver.maps.map.compose.rememberFusedLocationSource
+import com.naver.maps.map.overlay.ArrowheadPathOverlay
+import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
+import com.naver.maps.map.util.MarkerIcons
+import map.composeapp.generated.resources.start_point
+import org.jetbrains.compose.resources.stringResource
 import zone.ien.map.R
 import zone.ien.map.TAG
+import zone.ien.map.data.RouteResult
 import zone.ien.map.utils.Dlog
 import zone.ien.map.utils.MapLatLng
 import zone.ien.map.utils.MapPointF
+import map.composeapp.generated.resources.Res
+import zone.ien.map.data.Candidate
 
 @OptIn(ExperimentalNaverMapApi::class)
 @Composable
@@ -38,10 +49,13 @@ actual fun MapScreen(
     onSelectLatLng: (MapLatLng) -> Unit,
     markers: List<Triple<Int, Double, Double>>,
     routes: List<MapLatLng>,
+    candidates: List<Candidate>,
+    selectedIndex: Int,
     onMapClick: (MapPointF, MapLatLng) -> Unit,
 ) {
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition(LatLng(currentLatLng.latitude, currentLatLng.longitude), 16.0)
+
     }
 
     LaunchedEffect(selectedLatLng) {
@@ -54,21 +68,30 @@ actual fun MapScreen(
         }
     }
 
+    LaunchedEffect(selectedIndex, candidates) {
+        candidates.getOrNull(selectedIndex)?.let {
+            it.routes.let { list ->
+                var minLatitude = Double.MAX_VALUE
+                var minLongitude = Double.MAX_VALUE
+                var maxLatitude = Double.MIN_VALUE
+                var maxLongitude = Double.MIN_VALUE
+
+                list?.forEach { latLng ->
+
+                    if (minLatitude > latLng.latitude) minLatitude = latLng.latitude
+                    if (maxLatitude < latLng.latitude) maxLatitude = latLng.latitude
+                    if (minLongitude > latLng.longitude) minLongitude = latLng.longitude
+                    if (maxLongitude < latLng.longitude) maxLongitude = latLng.longitude
+                }
+
+                cameraPositionState.animate(CameraUpdate.fitBounds(LatLngBounds(LatLng(minLatitude, minLongitude), LatLng(maxLatitude, maxLongitude)), 100))
+            }
+        }
+    }
+
     NaverMap(
-//        locationSource = rememberFusedLocationSource(),
-//        properties = MapProperties(
-//            locationTrackingMode = LocationTrackingMode.Follow
-//        ),
         cameraPositionState = cameraPositionState,
         onMapClick = { point, latLng -> onMapClick(MapPointF(point.x, point.y), MapLatLng(latLng.latitude, latLng.longitude)) },
-        onMapDoubleTab = { point, latLng -> Dlog.d(TAG, "onMapDoubleTab"); true },
-        onMapLongClick = { point, latLng -> Dlog.d(TAG, "onMapLongClick"); true },
-        onMapLoaded = { Dlog.d(TAG, "onMapLoaded") },
-        onMapTwoFingerTap = { point, latLng -> Dlog.d(TAG, "onMapTwoFingerTap"); true},
-        onOptionChange = { Dlog.d(TAG, "onOptionChange") },
-        onLocationChange = { Dlog.d(TAG, "onLocationChange ${it}") },
-        onSymbolClick = { Dlog.d(TAG, "onSymbolClick ${it}"); true },
-        onIndoorSelectionChange = { Dlog.d(TAG, "onIndoorSelectionChange ${it}") },
         modifier = modifier
     ) {
         Marker(
@@ -85,7 +108,26 @@ actual fun MapScreen(
                 coords = routes.map { LatLng(it.latitude, it.longitude) },
             )
         }
-
-
+        if (candidates.isNotEmpty() && selectedIndex >= 0 && candidates.lastIndex >= selectedIndex) {
+            candidates[selectedIndex]?.let { candidate ->
+                candidate.routes?.let { list ->
+                    ArrowheadPathOverlay(
+                        color = MaterialTheme.colorScheme.tertiary,
+                        outlineWidth = 0.dp,
+                        coords = list.map { LatLng(it.latitude, it.longitude) },
+                    )
+                    Marker(
+                        icon = MarkerIcons.BLUE,
+                        captionText = stringResource(Res.string.start_point),
+                        state = MarkerState(position = LatLng(list.first().latitude, list.first().longitude))
+                    )
+                }
+                Marker(
+                    icon = MarkerIcons.RED,
+                    captionText = candidate.routeResult.waypoint,
+                    state = MarkerState(position = LatLng(candidate.routeResult.latLng.latitude, candidate.routeResult.latLng.longitude))
+                )
+            }
+        }
     }
 }

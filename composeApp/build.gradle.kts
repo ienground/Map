@@ -87,6 +87,7 @@ kotlin {
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
+            implementation(libs.koin.viewmodel)
 
             implementation(libs.kmp.kermit)
             implementation(libs.kolor)

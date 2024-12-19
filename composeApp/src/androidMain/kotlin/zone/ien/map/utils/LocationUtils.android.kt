@@ -24,16 +24,6 @@ import zone.ien.map.datastore.DEFAULT_DATASTORE
 actual object LocationUtils: KoinComponent {
     private val context: Context by inject()
     private val lm: LocationManager by lazy { context.getSystemService(Context.LOCATION_SERVICE) as LocationManager }
-    private val dataStore: DataStore<Preferences> by inject(DEFAULT_DATASTORE)
-
-//    private val locationListener = LocationListener { location ->
-//        CoroutineScope(Dispatchers.IO).launch {
-//            dataStore.edit {
-//                it[Pref.Key.CURRENT_LATITUDE] = location.latitude
-//                it[Pref.Key.CURRENT_LONGITUDE] = location.longitude
-//            }
-//        }
-//    }
 
     actual fun getCurrentLocation(setLatLng: (MapLatLng) -> Unit) {
         val isGPSEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -42,10 +32,6 @@ actual object LocationUtils: KoinComponent {
         val locationListener = LocationListener { location ->
             CoroutineScope(Dispatchers.IO).launch {
                 setLatLng(MapLatLng(location.latitude, location.longitude))
-//                dataStore.edit {
-//                    it[Pref.Key.CURRENT_LATITUDE] = location.latitude
-//                    it[Pref.Key.CURRENT_LONGITUDE] = location.longitude
-//                }
             }
         }
 

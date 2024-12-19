@@ -9,7 +9,7 @@ interface HistoryRepository {
 
     fun getSize(): Flow<Int>
 
-    fun getByCoordinate(latitude: Double, longitude: Double): Long?
+    fun getByCoordinate(latitude: Double, longitude: Double): Flow<History?>
 
     suspend fun upsert(data: History): Long
 

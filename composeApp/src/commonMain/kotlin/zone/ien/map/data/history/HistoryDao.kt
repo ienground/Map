@@ -24,7 +24,7 @@ interface HistoryDao {
     @Query("SELECT COUNT(*) FROM History")
     fun getSize(): Flow<Int>
 
-    @Query("SELECT id FROM History WHERE latitude = :latitude AND longitude = :longitude")
-    fun getByCoordinate(latitude: Double, longitude: Double): Long?
+    @Query("SELECT * FROM History WHERE latitude = :latitude AND longitude = :longitude")
+    fun getByCoordinate(latitude: Double, longitude: Double): Flow<History?>
 
 }

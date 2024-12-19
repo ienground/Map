@@ -72,6 +72,7 @@
     <string name="tooltip_label">show tooltip</string>
     <string name="more">더보기</string>
     <string name="add">추가</string>
+    <string name="none">없음</string>
 
     <!--Detail Screen-->
     <string name="edit">Edit</string>
@@ -93,6 +94,11 @@
     <string name="query_empty">결과 없음</string>
     <string name="input_query">검색..</string>
 
+    <!--ProfileEdit-->
+    <string name="set_home">집 설정</string>
+    <string name="set_office">직장 설정</string>
+    <string name="set_school">학교 설정</string>
+
     <!--MapDirection-->
     <string name="traffic_fast">가장 빠른</string>
     <string name="traffic_comfort">편안한</string>
@@ -100,6 +106,9 @@
     <string name="traffic_free">무료 우선</string>
     <string name="traffic_no_car_only">자동차 전용 회피</string>
     <string name="start_guide">안내시작</string>
+    <string name="start_point">출발지</string>
+    <string name="dest_point">도착지</string>
+    <string name="taxi_price">택시비 약 ₩%1$s</string>
 
     <!--History-->
     <string name="today">오늘</string>

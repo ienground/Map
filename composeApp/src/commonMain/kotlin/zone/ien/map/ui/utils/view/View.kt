@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBackIos
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -175,11 +176,14 @@ fun AdaptiveBackButton(
             }
         },
         cupertino = {
-            CupertinoNavigateBackButton(
-                onClick = onClick
-            ) {
-                CupertinoText(stringResource(Res.string.back))
+            IconButton(onClick = onClick) {
+                Icon(imageVector = Icons.AutoMirrored.Rounded.ArrowBackIos, contentDescription = stringResource(Res.string.back))
             }
+//            CupertinoNavigateBackButton(
+//                onClick = onClick
+//            ) {
+//                CupertinoText(stringResource(Res.string.back))
+//            }
         }
     )
 }

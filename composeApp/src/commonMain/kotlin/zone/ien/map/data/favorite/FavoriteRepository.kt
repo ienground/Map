@@ -11,6 +11,10 @@ interface FavoriteRepository {
 
     fun getByCoordinate(latitude: Double, longitude: Double): Flow<Favorite?>
 
+    fun getByCoordinateOnlyEtc(latitude: Double, longitude: Double): Flow<Favorite?>
+
+    fun getByType(type: Int): Flow<Favorite?>
+
     suspend fun upsert(data: Favorite): Long
 
     suspend fun delete(data: Favorite)

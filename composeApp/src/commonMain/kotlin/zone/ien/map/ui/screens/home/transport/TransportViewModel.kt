@@ -37,6 +37,8 @@ import org.koin.core.component.inject
 import zone.ien.map.TAG
 import zone.ien.map.constant.ApiKey
 import zone.ien.map.constant.MapDirection
+import zone.ien.map.constant.Pref
+import zone.ien.map.data.Candidate
 import zone.ien.map.data.QueryResult
 import zone.ien.map.data.RouteResult
 import zone.ien.map.data.favorite.Favorite
@@ -54,8 +56,8 @@ import zone.ien.map.utils.toRoadAddress
 
 @OptIn(ExperimentalMaterial3Api::class)
 class TransportViewModel(
-    val favoriteRepository: FavoriteRepository,
-    val historyRepository: HistoryRepository
+    private val favoriteRepository: FavoriteRepository,
+    private val historyRepository: HistoryRepository
 ): ViewModel(), KoinComponent {
     val historyUiStateList: StateFlow<TransportHistoryUiStateList> =
         historyRepository.getAll().map { TransportHistoryUiStateList(it.map { history ->
@@ -177,15 +179,16 @@ class TransportViewModel(
 
     fun requestRouteInitial(goal: MapLatLng) {
         // 저장
+        updateUiState(item = uiState.item.copy(isRouteLoading = true))
         CoroutineScope(Dispatchers.IO).launch {
             uiState.item.selectedQuery?.let { query ->
                 val item = History(label = query.title, address = query.address, latitude = query.latitude, longitude = query.longitude, category = query.categories.joinToString(">"))
-                val id = historyRepository.getByCoordinate(query.latitude, query.longitude)
+                val pre = historyRepository.getByCoordinate(query.latitude, query.longitude).first()
 
-                if (id == null) {
+                if (pre == null) {
                     historyRepository.upsert(item)
                 } else {
-                    historyRepository.upsert(item.apply { this.id = id })
+                    historyRepository.upsert(item.apply { this.id = pre.id })
                 }
             }
 
@@ -202,9 +205,6 @@ class TransportViewModel(
                 val path = result[0].jsonObject["path"]?.jsonArray?.map { json ->
                     json.jsonArray.let { MapLatLng(it[1].jsonPrimitive.double, it[0].jsonPrimitive.double) }
                 }
-
-//                Dlog.d(TAG, "summary: ${summary}")
-//                Dlog.d(TAG, "path: ${path}")
 
                 if (path != null) {
                     val represent = extractRepresentativeCoordinatesByCount(path, 3)
@@ -265,18 +265,16 @@ class TransportViewModel(
 //                            Dlog.d(TAG, "summary: ${result.title} ${index} ${summary}")
 //                            Dlog.d(TAG, "path: ${path}")
 
-                            Pair(RouteResult(waypoint = result.title, latLng = MapLatLng(result.latitude, result.longitude), distance = distance, duration = duration, tollFare = tollFare, taxiFare = taxiFare), path)
+                            Candidate(RouteResult(waypoint = result.title, latLng = MapLatLng(result.latitude, result.longitude), distance = distance, duration = duration, tollFare = tollFare, taxiFare = taxiFare), path)
                         } else null
                     } else {
                         Dlog.d(TAG, "null")
                         null
                     }
-                }
+                }.sortedBy { it?.routeResult?.duration }
+                    .distinct().filterNotNull()
 
-                updateUiState(item = uiState.item.copy(routesCandidates = candidates, sheetType = SheetType.PREVIEW))
-//                candidates.forEachIndexed { index, pair ->
-//                    Dlog.d(TAG, "${index} ${pair?.first} ${pair?.second}")
-//                }
+                updateUiState(item = uiState.item.copy(routesCandidates = candidates, selectedCandidates = 0, sheetType = SheetType.PREVIEW, isRouteLoading = false))
             }
 
         }
@@ -284,14 +282,13 @@ class TransportViewModel(
 
     fun updateFavorite(query: QueryResult) {
         viewModelScope.launch {
-            val pre = favoriteRepository.getByCoordinate(query.latitude, query.longitude).first()
+            val pre = favoriteRepository.getByCoordinateOnlyEtc(query.latitude, query.longitude).first()
             val entity = Favorite(label = query.title, address = query.address, latitude = query.latitude, longitude = query.longitude, type = -1, registerTime = KZonedDateTime.now(), lastUsedTime = KZonedDateTime.now())
             if (pre == null) {
                 favoriteRepository.upsert(entity)
             } else {
                 favoriteRepository.delete(pre)
             }
-
         }
     }
 
@@ -332,18 +329,20 @@ data class TransportDetails @OptIn(ExperimentalMaterial3Api::class) constructor(
     val isCurrentInitialized: Boolean = false,
     val currentRoadAddress: String = "",
     val currentAddress: String = "",
-    val currentLatLng: MapLatLng = MapLatLng(0.0, 0.0),
+    val currentLatLng: MapLatLng = MapLatLng(Pref.Default.CURRENT_LATITUDE, Pref.Default.CURRENT_LONGITUDE),
 
     val selectedRoadAddress: String = "",
     val selectedAddress: String = "",
-    val selectedLatLng: MapLatLng = MapLatLng(0.0, 0.0),
+    val selectedLatLng: MapLatLng = MapLatLng(Pref.Default.CURRENT_LATITUDE, Pref.Default.CURRENT_LONGITUDE),
 
     val layovers: SnapshotStateList<Pair<Long, String>> = mutableStateListOf(),
     val markers: SnapshotStateList<Triple<Int, Double, Double>> = mutableStateListOf(),
-    val selectedCandidates: Int = 0,
+    val isRouteLoading: Boolean = false,
+
+    val selectedCandidates: Int = -1,
     val routesInitial: SnapshotStateList<MapLatLng> = mutableStateListOf(),
-    val routesCandidates: List<Pair<RouteResult, List<MapLatLng>?>?> = listOf(),
-    val routesFinal: SnapshotStateList<MapLatLng> = mutableStateListOf()
+    val routesCandidates: List<Candidate> = listOf(),
+    val routesFinal: SnapshotStateList<MapLatLng> = mutableStateListOf(),
 )
 
 data class HistoryDetails(

@@ -1,6 +1,7 @@
 package zone.ien.map.data.history
 
 import kotlinx.coroutines.flow.Flow
+import zone.ien.map.data.favorite.Favorite
 
 class HistoryOfflineRepository(private val dao: HistoryDao): HistoryRepository {
     override fun getAll(): Flow<List<History>> = dao.getAll()
@@ -9,7 +10,7 @@ class HistoryOfflineRepository(private val dao: HistoryDao): HistoryRepository {
 
     override fun getSize(): Flow<Int> = dao.getSize()
 
-    override fun getByCoordinate(latitude: Double, longitude: Double): Long? = dao.getByCoordinate(latitude, longitude)
+    override fun getByCoordinate(latitude: Double, longitude: Double): Flow<History?> = dao.getByCoordinate(latitude, longitude)
 
     override suspend fun upsert(data: History) = dao.upsert(data)
 

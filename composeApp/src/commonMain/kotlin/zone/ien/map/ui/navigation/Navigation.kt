@@ -8,12 +8,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import zone.ien.map.ui.screens.home.HomeDestination
 import zone.ien.map.ui.screens.home.HomeScreen
 import zone.ien.map.ui.screens.home.profile.ProfileDestination
 import zone.ien.map.ui.screens.home.profile.ProfileScreen
+import zone.ien.map.ui.screens.home.profile.edit.ProfileEditDestination
+import zone.ien.map.ui.screens.home.profile.edit.ProfileEditScreen
+import zone.ien.map.ui.screens.home.profile.list.ProfileListDestination
+import zone.ien.map.ui.screens.home.profile.list.ProfileListScreen
 import zone.ien.map.ui.screens.home.transport.TransportDestination
 import zone.ien.map.ui.screens.home.transport.TransportScreen
 import zone.ien.map.ui.screens.permissions.PermissionsDestination
@@ -84,6 +90,8 @@ fun HomeNavigationGraph(
     NavHost(
         navController = navController,
         startDestination = TransportDestination.route,
+        enterTransition = { fadeIn(tween(700)) },
+        exitTransition = { fadeOut(tween(700)) },
         modifier = modifier
     ) {
         composable(route = TransportDestination.route) {
@@ -94,6 +102,37 @@ fun HomeNavigationGraph(
 
         composable(route = ProfileDestination.route) {
             ProfileScreen(
+                navigateBack = { navController.popBackStack() }
+            )
+        }
+    }
+}
+
+@Composable
+fun ProfileNavigationGraph(
+    modifier: Modifier = Modifier,
+    navController: NavHostController
+) {
+    NavHost(
+        navController = navController,
+        startDestination = ProfileListDestination.route,
+        enterTransition = { fadeIn(tween(700)) },
+        exitTransition = { fadeOut(tween(700)) },
+        modifier = modifier
+    ) {
+        composable(
+            route = ProfileListDestination.route,
+        ) {
+            ProfileListScreen(
+                navigateToEdit = { type -> navController.navigate("${ProfileEditDestination.route}?${ProfileEditDestination.itemTypeArg}=$type") }
+            )
+        }
+
+        composable(
+            route = ProfileEditDestination.routeWithArgs,
+            arguments = listOf(navArgument(ProfileEditDestination.itemTypeArg) { type = NavType.IntType })
+        ) {
+            ProfileEditScreen(
                 navigateBack = { navController.popBackStack() }
             )
         }

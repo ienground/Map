@@ -1,5 +1,6 @@
 package zone.ien.map.utils
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.intl.Locale
 import com.sunnychung.lib.multiplatform.kdatetime.KDate
 import com.sunnychung.lib.multiplatform.kdatetime.KDateTimeFormat
@@ -15,6 +16,16 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.toLocalDateTime
+import map.composeapp.generated.resources.Res
+import map.composeapp.generated.resources.time_format_1hour
+import map.composeapp.generated.resources.time_format_1hour_short
+import map.composeapp.generated.resources.time_format_1minute
+import map.composeapp.generated.resources.time_format_1minute_short
+import map.composeapp.generated.resources.time_format_hour
+import map.composeapp.generated.resources.time_format_hour_short
+import map.composeapp.generated.resources.time_format_minute
+import map.composeapp.generated.resources.time_format_minute_short
+import org.jetbrains.compose.resources.stringResource
 import zone.ien.map.data.favorite.Favorite
 import zone.ien.map.data.history.History
 import zone.ien.map.ui.screens.home.transport.HistoryDetails
@@ -108,6 +119,23 @@ fun getNextRepeatDay(time: KZonedDateTime, alarmTime: KDuration, data: Int): Int
 
     return nextRepeatDay + 1
 }
+/**
+ * Time
+ */
+@Composable
+fun Int.toFormattedTime(): String {
+    val hours = this / 60
+    val minutes = this % 60
+    val time = arrayListOf<String>()
+
+    if (hours == 1) time.add(stringResource(Res.string.time_format_1hour_short))
+    else if (hours > 0) time.add(stringResource(Res.string.time_format_hour_short, hours))
+    if (minutes == 1) time.add(stringResource(Res.string.time_format_1minute_short))
+    else if (minutes > 0) time.add(stringResource(Res.string.time_format_minute_short, minutes))
+
+    return time.joinToString(" ")
+}
+
 
 /**
  * List

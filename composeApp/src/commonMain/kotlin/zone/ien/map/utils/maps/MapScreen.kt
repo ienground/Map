@@ -2,6 +2,8 @@ package zone.ien.map.utils.maps
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import zone.ien.map.data.Candidate
+import zone.ien.map.data.RouteResult
 import zone.ien.map.utils.MapLatLng
 import zone.ien.map.utils.MapPointF
 
@@ -13,6 +15,8 @@ expect fun MapScreen(
     onSelectLatLng: (MapLatLng) -> Unit,
     markers: List<Triple<Int, Double, Double>> = listOf(),
     routes: List<MapLatLng> = listOf(),
+    candidates: List<Candidate>,
+    selectedIndex: Int,
     onMapClick: (MapPointF, MapLatLng) -> Unit = { _, _ -> },
 )
 

@@ -1,29 +1,12 @@
 package zone.ien.map.utils.maps
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.interop.UIKitView
-import androidx.compose.ui.interop.UIKitViewController
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.ComposeUIViewController
+import androidx.compose.ui.viewinterop.UIKitInteropProperties
+import androidx.compose.ui.viewinterop.UIKitViewController
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.ObjCAction
-import platform.CoreGraphics.CGRectMake
-import platform.Foundation.NSSelectorFromString
-import platform.MapKit.MKMapView
-import platform.UIKit.UIControlEventEditingChanged
-import platform.UIKit.UITextField
-import platform.UIKit.UIViewController
-
-import zone.ien.map.TAG
-import zone.ien.map.utils.Dlog
+import zone.ien.map.data.Candidate
 import zone.ien.map.utils.MapLatLng
 import zone.ien.map.utils.MapPointF
 import zone.ien.map.utils.SwiftUIFactory
@@ -37,16 +20,40 @@ actual fun MapScreen(
     onSelectLatLng: (MapLatLng) -> Unit,
     markers: List<Triple<Int, Double, Double>>,
     routes: List<MapLatLng>,
+    candidates: List<Candidate>,
+    selectedIndex: Int,
     onMapClick: (MapPointF, MapLatLng) -> Unit,
 ) {
-    Dlog.i(TAG, "${SwiftUIFactory.shared}")
-    Text("hello map")
     SwiftUIFactory.shared?.let {
+        LaunchedEffect(Unit) {
+
+        }
+        LaunchedEffect(selectedLatLng) {
+
+        }
+
+        LaunchedEffect(selectedIndex, candidates) {
+
+        }
+
         UIKitViewController(
             factory = {
-                it.makeController()
+                it.makeController(
+                    currentLatLng,
+                    selectedLatLng,
+                    onSelectLatLng,
+                    markers,
+                    routes,
+                    candidates,
+                    selectedIndex,
+                    onMapClick
+                )
             },
-            modifier = modifier
+            modifier = modifier,
+            properties = UIKitInteropProperties(
+                isInteractive = true,
+                isNativeAccessibilityEnabled = true
+            )
         )
     }
 }

@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 
 fun FavoriteDatabase.Companion.getDatabaseBuilder(context: Context): RoomDatabase.Builder<FavoriteDatabase> {
     val dbFile = context.getDatabasePath("Favorite.db")
+
     return Room.databaseBuilder<FavoriteDatabase>(
         context = context,
         name = dbFile.absolutePath

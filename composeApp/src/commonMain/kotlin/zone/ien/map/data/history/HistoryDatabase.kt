@@ -7,7 +7,7 @@ import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
 import zone.ien.map.data.Converters
 
-@Database(entities = [History::class], version = 1, exportSchema = false)
+@Database(entities = [History::class], version = 2, exportSchema = false)
 @ConstructedBy(HistoryDatabaseCtor::class)
 @TypeConverters(Converters::class)
 abstract class HistoryDatabase: RoomDatabase() {

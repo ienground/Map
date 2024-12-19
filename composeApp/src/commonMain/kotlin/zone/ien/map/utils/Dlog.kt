@@ -28,7 +28,7 @@ object Dlog {
      * Log Level Debug
      */
     fun d(tag: String, message: String) {
-        if (PlatformDependent.isDebug) Logger.d(tag) { message }
+        if (PlatformDependent.isDebug) Logger.w(tag) { message }
     }
 
     /**
