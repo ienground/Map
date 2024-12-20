@@ -1,9 +1,11 @@
 package zone.ien.map.utils.maps
 
 import android.graphics.PointF
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -18,6 +20,7 @@ import com.naver.maps.map.compose.ExperimentalNaverMapApi
 import com.naver.maps.map.compose.LocationTrackingMode
 import com.naver.maps.map.compose.MapProperties
 import com.naver.maps.map.compose.MapType
+import com.naver.maps.map.compose.MapUiSettings
 import com.naver.maps.map.compose.Marker
 import com.naver.maps.map.compose.MarkerDefaults
 import com.naver.maps.map.compose.MarkerState
@@ -47,9 +50,9 @@ actual fun MapScreen(
     currentLatLng: MapLatLng,
     selectedLatLng: MapLatLng,
     onSelectLatLng: (MapLatLng) -> Unit,
-    markers: List<Triple<Int, Double, Double>>,
-    routes: List<MapLatLng>,
-    candidates: List<Candidate>,
+    markers: SnapshotStateList<Triple<Int, Double, Double>>,
+    routes: SnapshotStateList<MapLatLng>,
+    candidates: SnapshotStateList<Candidate>,
     selectedIndex: Int,
     onMapClick: (MapPointF, MapLatLng) -> Unit,
 ) {
@@ -57,6 +60,7 @@ actual fun MapScreen(
         position = CameraPosition(LatLng(currentLatLng.latitude, currentLatLng.longitude), 16.0)
 
     }
+    val locationSource = rememberFusedLocationSource()
 
     LaunchedEffect(selectedLatLng) {
         cameraPositionState.animate(CameraUpdate.toCameraPosition(CameraPosition(LatLng(selectedLatLng.latitude, selectedLatLng.longitude), cameraPositionState.position.zoom)))
@@ -90,14 +94,19 @@ actual fun MapScreen(
     }
 
     NaverMap(
+        locationSource = locationSource,
+        properties = MapProperties(
+            isNightModeEnabled = isSystemInDarkTheme(),
+            locationTrackingMode = LocationTrackingMode.NoFollow
+        ),
         cameraPositionState = cameraPositionState,
         onMapClick = { point, latLng -> onMapClick(MapPointF(point.x, point.y), MapLatLng(latLng.latitude, latLng.longitude)) },
         modifier = modifier
     ) {
-        Marker(
-            icon = OverlayImage.fromResource(R.drawable.ic_current_anchor),
-            state = MarkerState(position = LatLng(currentLatLng.latitude, currentLatLng.longitude))
-        )
+//        Marker(
+//            icon = OverlayImage.fromResource(R.drawable.ic_current_anchor),
+//            state = MarkerState(position = LatLng(currentLatLng.latitude, currentLatLng.longitude))
+//        )
         markers.forEach {
             Marker(
                 state = MarkerState(position = LatLng(it.second, it.third))
@@ -109,7 +118,7 @@ actual fun MapScreen(
             )
         }
         if (candidates.isNotEmpty() && selectedIndex >= 0 && candidates.lastIndex >= selectedIndex) {
-            candidates[selectedIndex]?.let { candidate ->
+            candidates[selectedIndex].let { candidate ->
                 candidate.routes?.let { list ->
                     ArrowheadPathOverlay(
                         color = MaterialTheme.colorScheme.tertiary,

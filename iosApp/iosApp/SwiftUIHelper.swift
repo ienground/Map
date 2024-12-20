@@ -2,27 +2,22 @@ import ComposeApp
 import SwiftUI
 
 class TheFactory: SwiftUIFactory {
-    var controller: MapViewWrapperViewController? = nil
+    let controller = MapViewWrapperViewController()
     
-//    func makeController(
-//        selectedLatLng: MapLatLng,
-//        onMapClick: @escaping (MapPointF, MapLatLng) -> Void
-//    ) -> UIViewController {
-//        controller = MapViewWrapperViewController(selectedLatLng: selectedLatLng, onMapClick: onMapClick)
-//        return controller!
-//    }
+    func updateCurrentLatLng(currentLatLng: MapLatLng) { controller.updateCurrentLatLng(currentLatLng) }
+    func updateSelectedLatLng(selectedLatLng: MapLatLng) { controller.updateSelectedLatLng(selectedLatLng) }
+    func updateMarkers(markers: [KotlinTriple<KotlinInt, KotlinDouble, KotlinDouble>]) { controller.updateMarkers(markers) }
+    func updateRoutes(routes: [MapLatLng]) { controller.updateRoutes(routes) }
+    func updateCandidates(candidates: [Candidate]) { controller.updateCandidates(candidates) }
+    func updateSelectedIndex(selectedIndex: Int32) { controller.updateSelectedIndex(selectedIndex) }
     
     func makeController(
-        currentLatLng: MapLatLng,
-        selectedLatLng: MapLatLng,
         onSelectLatLng: @escaping (MapLatLng) -> Void,
-        markers: [KotlinTriple<KotlinInt, KotlinDouble, KotlinDouble>],
-        routes: [MapLatLng],
-        candidates: [Candidate],
-        selectedIndex:Int32,
         onMapClick: @escaping (MapPointF, MapLatLng) -> Void
     ) -> UIViewController {
-        controller = MapViewWrapperViewController(selectedLatLng: selectedLatLng, onMapClick: { _, _ in })
-        return controller!
+        controller.mapEnv.onSelectLatLng = onSelectLatLng
+        controller.mapEnv.onMapClick = onMapClick
+        
+        return controller
     }
 }

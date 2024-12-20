@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--서비스 이름-->
+    <string name="directions">길찾기</string>
+    <string name="profile">프로필</string>
+
+    <!--Permissions-->
+    <string name="permission_title">Permission to use application</string>
+    <string name="access_location">Location access</string>
+    <string name="access_location_desc">Access location when calendar alarm is created.</string>
+    <string name="allowed">Permission allowed</string>
+    <string name="declined_desc">Please grant permission directly in settings.</string>
+    <string name="permission_error">Please grant all permissions.</string>
+    <string name="start_navigate">Start</string>
+
+    <!--Time Format for Formatting-->
+    <string name="time_format_before">%1$s 전</string>
+    <string name="time_format_hour">%1$d시간</string>
+    <string name="time_format_minute">%1$d분</string>
+    <string name="time_format_second">%1$d초</string>
+    <string name="time_format_1hour">1시간</string>
+    <string name="time_format_1minute">1분</string>
+    <string name="time_format_1second">1초</string>
+    <string name="time_format_hour_short">%1$d시간</string>
+    <string name="time_format_minute_short">%1$d분</string>
+    <string name="time_format_second_short">%1$d초</string>
+    <string name="time_format_1hour_short">1시간</string>
+    <string name="time_format_1minute_short">1분</string>
+    <string name="time_format_1second_short">1초</string>
+
+    <!--Time Format for SimpleDateFormat -->
+    <string name="date_time_format">yyyy년 M월 d일 E요일 A h:mm</string>
+    <string name="date_format">yyyy년 M월 d일 E요일</string>
+    <string name="date_format_no_year">M월 d일 E요일</string>
+    <string name="alarm_content_format">EEE A h:mm</string>
+    <string name="apm_time_format">A h:mm</string>
+    <string name="time_oclock_format">h</string>
+    <string name="time_oclock_apm_format">A h</string>
+    <string name="time_oclock_str">%1$s시</string>
+
+    <!--Delete Dialog-->
+    <string name="delete">삭제</string>
+    <string name="delete_title">삭제할까요?</string>
+    <string name="delete_content">정말로 삭제할까요?</string>
+    <string name="cannot_be_undone">이 작업은 취소할 수 없습니다.</string>
+
+    <!--Save Dialog-->
+    <string name="ask_to_save">저장할까요?</string>
+    <string name="ask_to_save_message">저장하지 않은 정보는 손실됩니다.</string>
+    <string name="not_save">저장하지 않음</string>
+
+    <!--Time (Picker) String-->
+    <string name="date_picker_title">날짜 선택</string>
+    <string name="time_picker_title">시간 선택</string>
+    <string name="hour">시간</string>
+    <string name="minute">분</string>
+    <string name="second">초</string>
+
+    <!--Common String Value-->
+    <string name="detail_settings">세부 설정</string>
+    <string name="cancel">취소</string>
+    <string name="ok">확인</string>
+    <string name="press_back_to_exit">뒤로가기 버튼을 한번 더 누르시면 종료됩니다.</string>
+    <string name="save">저장</string>
+    <string name="use_once">한 번만 사용</string>
+    <string name="close">닫기</string>
+    <string name="max_message">%1$d개보다 많이 만들 수 없어요</string>
+    <string name="max_message_free">무료 버전에서는 %1$d개보다 많이 만들 수 없어요</string>
+    <string name="back">뒤로</string>
+    <string name="more_options">옵션 더보기</string>
+    <string name="tooltip_description">"도움말"</string>
+    <string name="tooltip_label">"도움말 표시"</string>
+    <string name="more">더보기</string>
+    <string name="add">추가</string>
+    <string name="none">없음</string>
+
+    <!--Detail Screen-->
+    <string name="edit">Edit</string>
+    <string name="label">Label</string>
+    <string name="no_label">No label</string>
+    <string name="schedule">Schedule</string>
+    <string name="schedule_pro_msg">Scheduling (Pro)</string>
+    <string name="scheduled">Scheduled</string>
+    <string name="not_scheduled">Not scheduled</string>
+    <string name="at_least_one_item">At least one item</string>
+    <string name="alarm_ring">Set alarm ring</string>
+    <string name="vibrate">Vibrate</string>
+
+    <!--Transport-->
+    <string name="home">집</string>
+    <string name="office">직장</string>
+    <string name="school">학교</string>
+    <string name="recent">최근</string>
+    <string name="query_empty">결과 없음</string>
+    <string name="input_query">검색..</string>
+
+    <!--ProfileEdit-->
+    <string name="set_home">집 설정</string>
+    <string name="set_office">직장 설정</string>
+    <string name="set_school">학교 설정</string>
+
+    <!--MapDirection-->
+    <string name="traffic_fast">가장 빠른</string>
+    <string name="traffic_comfort">편안한</string>
+    <string name="traffic_optimal">실시간 추천</string>
+    <string name="traffic_free">무료 우선</string>
+    <string name="traffic_no_car_only">자동차 전용 회피</string>
+    <string name="start_guide">안내시작</string>
+    <string name="start_point">출발지</string>
+    <string name="dest_point">도착지</string>
+    <string name="taxi_price">택시비 약 ₩%1$s</string>
+
+    <!--History-->
+    <string name="today">오늘</string>
+    <string name="yesterday">어제</string>
+    <string name="this_week">이번 주</string>
+    <string name="this_month">이번 달</string>
+    <string name="this_year">올해</string>
+    <string name="long_ago">이전</string>
+
+    <!--Notification-->
+    <string name="calarm_alarm">Calarm Alarm</string>
+    <string name="calarm_calendar">Calarm Calendar Alarm</string>
+
+    <!--Settings Category-->
+    <string name="settings_general">General</string>
+    <string name="alarm_settings">Alarm settings</string>
+    <string name="calendar_alarm_settings">Calendar alarm settings</string>
+    <string name="timer_settings">Timer Settings</string>
+    <string name="cycle_timer_settings">Cycling Timer Settings</string>
+    <string name="stopwatch_settings">Stopwatch Settings</string>
+    <string name="info_and_ask"><![CDATA[Info & Ask]]></string>
+    <string name="dev_mode">Developer mode</string>
+    <string name="select_the_menu_settings">Select the menu</string>
+
+    <!--Sound Selection Dialog-->
+    <string name="default_ring">Default ring</string>
+    <string name="default_timer_expired">Timer expired</string>
+    <string name="no_bells_set">No bells set</string>
+
+    <!--General Settings-->
+    <string name="use_dynamic_colors">Use dynamic colors</string>
+    <string name="use_dynamic_colors_sum_off">Apply the default color throughout the app.</string>
+    <string name="use_dynamic_colors_sum_on">Apply dynamic colors throughout the app.</string>
+    <string name="home_address">Home address</string>
+    <string name="set_home_location">Set home location</string>
+    <string name="getting_address">Getting address..</string>
+    <string name="no_address_found">No address found</string>
+    <string name="cannot_get_address">Cannot get address</string>
+    <string name="move_to_current_location">Move to current location</string>
+    <string name="alarm_volume">Alarm volume</string>
+
+    <!--Alarm Settings-->
+    <string name="alarm_snooze_duration">Alarm snooze duration</string>
+    <string name="alarm_auto_dismiss_duration">Alarm auto dismiss duration</string>
+    <string name="sub_alarm_to_create">Sub alarm to create</string>
+    <string name="default_alarm_sound">Default alarm sound</string>
+    <string name="set_alarm_swipe_reverse">Reverse alarm screen swipe direction</string>
+    <string name="set_alarm_swipe_reverse_sum_on">Alarm off on the left, snooze on the right</string>
+    <string name="set_alarm_swipe_reverse_sum_off">Snooze on the left, alarm off on the right</string>
+
+    <!--Calendar Alarm Settings-->
+    <string name="calendar_alarm_auto_dismiss_duration">Calendar alarm auto dismiss duration</string>
+    <string name="calendar_alarm_create_option">Calendar alarm create option</string>
+    <string name="first_event">Only first event</string>
+    <string name="fixed_time_event">Events before time</string>
+    <string name="all_events">Every event</string>
+    <string name="set_fixed_time">Set time</string>
+    <string name="default_calendar_alarm_sound">Default calendar alarm sound</string>
+    <string name="time_to_go_out">Time to get ready to go out</string>
+    <string name="calendar_source_of_calendar_alarm">Calendar source of Calendar alarm</string>
+    <string name="select_calendar">Select calendar..</string>
+    <string name="my_schedule">My Schedule</string>
+
+    <!--Timer Settings-->
+    <string name="default_timer_sound">Default timer sound</string>
+    <string name="default_sub_timer_sound">Default sub timer sound</string>
+
+    <!--Cycling Timer Settings-->
+    <string name="default_cycle_timer_sound">Default cycling timer sound</string>
+
+    <!--Stopwatch Settings-->
+    <string name="title_no_show_reset_dialog">Do not show reset dialog</string>
+    <string name="sum_on_no_show_reset_dialog">Never shows reset dialog again.</string>
+    <string name="sum_off_no_show_reset_dialog">Shows reset dialog.</string>
+    <string name="target_laps">Target lapses</string>
+    <string name="laps">Lapses</string>
+
+    <!--Info Settings-->
+    <string name="calarm_version">Calarm Version</string>
+    <string name="dev_ienlab">Designed, Developed By ienlab\nInstagram : @ienlab</string>
+    <string name="update_log">Update log</string>
+    <string name="update_log_desc">Check new features from this version.</string>
+    <string name="ask_to_dev">Ask to Developer</string>
+    <string name="ask_to_dev_desc">Please send us bugs, questions, or your backup data in case of data aggregation errors!</string>
+    <string name="ask">Ask</string>
+    <string name="email_text">Calarm User Comment</string>
+    <string name="open_source_license">Open Source License</string>
+    <string name="open_source_license_desc">Licenses of Open Sources Used in App</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_policy_desc">Check the privacy policy.</string>
+
+    <!--Deskclock Settings-->
+    <string name="force_black_background">Force black background</string>
+    <string name="force_black_background_sum_on">Forces the background of the Deskclock to be black.</string>
+    <string name="force_black_background_sum_off">Applies the Deskclock\'s background to its original color.</string>
+    <string name="no_items">No items</string>
+    <string name="start">Start</string>
+    <string name="hidden_noti_channels">Hidden notification channels</string>
+    <string name="one_channel_hidden">1 channel hidden</string>
+    <string name="multi_channel_hidden">%1$d channels hidden</string>
+    <string name="no_channel_hidden">No channels hidden</string>
+
+    <!--Dev mode -->
+    <string name="dev_mode_enabled">Developer mode enabled</string>
+
+    <!--Firebase Cloud Messaging-->
+    <string name="push_notification">Push notification</string>
+
+    <!--Widget-->
+    <string name="analog_clock">Analog Clock</string>
+
+    <!--Sample -->
+    <string name="sample_calendar_alarm_address">Google Korea, 152 Teheran-ro, Gangnam-gu, Seoul, South Korea</string>
+    <string name="sample_calendar_alarm_label">Company Meeting</string>
+    <string name="sample_calendar_alarm_label2">Drama time</string>
+    <string name="sample_calendar_alarm_label3">Family Meeting</string>
+    <string name="sample_calarm_color" translatable="false">#FF4081</string>
+    <string name="sample_calarm_account_name" translatable="false">my@ien.zone</string>
+    <string name="sample_calarm_account_type" translatable="false">com.google</string>
+    <string name="sample_calarm_display_name" translatable="false">my@ien.zone</string>
+    <string name="sample_calarm_color2" translatable="false">#7C4DFF</string>
+</resources>

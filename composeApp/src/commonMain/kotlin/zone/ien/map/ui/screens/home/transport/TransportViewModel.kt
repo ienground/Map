@@ -91,15 +91,6 @@ class TransportViewModel(
     init {
         viewModelScope.launch {
             getCurrentLocation()
-            dataStore.data.collect {
-//                val currentLatitude = it[Pref.Key.CURRENT_LATITUDE] ?: 0.0
-//                val currentLongitude = it[Pref.Key.CURRENT_LONGITUDE] ?: 0.0
-
-//                Dlog.d(TAG, "update current latLng: ${currentLatitude} ${currentLongitude}, ${uiState.item.currentUpdateCount}")
-
-//                updateUiState(uiState.item.copy(currentLatLng = MapLatLng(currentLatitude, currentLongitude), currentUpdateCount = uiState.item.currentUpdateCount + 1))
-//                getCurrentAddress(currentLatitude, currentLongitude)
-            }
         }
     }
 
@@ -113,6 +104,7 @@ class TransportViewModel(
                 updateUiState(uiState.item.copy(selectedLatLng = it))
             }
             updateUiState(uiState.item.copy(currentLatLng = it, isCurrentInitialized = true))
+            Dlog.d(TAG, "location: ${it}")
         }
     }
 
@@ -208,12 +200,29 @@ class TransportViewModel(
 
                 if (path != null) {
                     val represent = extractRepresentativeCoordinatesByCount(path, 3)
+                    val routesInitial = arrayListOf<MapLatLng>()
                     val routes = uiState.item.routesInitial
+                    routesInitial.addAll(path)
                     routes.clear()
                     routes.addAll(represent)
                     updateUiState(uiState.item.copy(routesInitial = routes))
 
-                    requestWaypoints(goal)
+                    if (uiState.item.layovers.isEmpty()) {
+                        val distance = summary?.get("distance")?.jsonPrimitive?.int ?: 0
+                        val duration = summary?.get("duration")?.jsonPrimitive?.int ?: 0
+                        val tollFare = summary?.get("tollFare")?.jsonPrimitive?.int ?: 0
+                        val taxiFare = summary?.get("taxiFare")?.jsonPrimitive?.int ?: 0
+
+                        updateUiState(item = uiState.item.copy(
+                            routesCandidates = mutableStateListOf(Candidate(
+                                routeResult = RouteResult("", goal, distance, duration, taxiFare, tollFare),
+                                routes = routesInitial
+                            )),
+                            selectedCandidates = 0, sheetType = SheetType.PREVIEW, isRouteLoading = false
+                        ))
+                    } else {
+                        requestWaypoints(goal)
+                    }
                 }
             }
         }
@@ -221,10 +230,9 @@ class TransportViewModel(
 
     fun requestWaypoints(goal: MapLatLng) {
         viewModelScope.launch {
-            if (uiState.item.layovers.isEmpty()) {
-
-            } else {
-                val candidates = uiState.item.routesInitial.mapIndexed { index, latLng ->
+            if (uiState.item.layovers.isNotEmpty()) {
+                val candidates = mutableStateListOf<Candidate>()
+                val _candidates = uiState.item.routesInitial.mapIndexed { index, latLng ->
                     val waypointResponse = client.get("https://dapi.kakao.com/v2/local/search/keyword.JSON?query=${uiState.item.layovers.first().second}&x=${latLng.longitude}&y=${latLng.latitude}&sort=accuracy&page=1&size=3") {
                         header("Authorization", ApiKey.KAKAO_API_KEY)
                     }
@@ -247,8 +255,6 @@ class TransportViewModel(
                             header("x-ncp-apigw-api-key", ApiKey.NAVER_MAP_CLIENT_KEY)
                         }
 
-                        Dlog.d(TAG, "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?goal=${goal.longitude}%2C${goal.latitude}&start=${uiState.item.currentLatLng.longitude}%2C${uiState.item.currentLatLng.latitude}&option=${uiState.item.trafficOption}&waypoints=${result.longitude},${result.latitude}")
-
                         val routeResult = Json.decodeFromString<JsonObject>(routeResponse.bodyAsText())["route"]?.jsonObject?.get(uiState.item.trafficOption)?.jsonArray
 
                         if (routeResult?.isNotEmpty() == true) {
@@ -262,18 +268,15 @@ class TransportViewModel(
                             val tollFare = summary?.get("tollFare")?.jsonPrimitive?.int ?: 0
                             val taxiFare = summary?.get("taxiFare")?.jsonPrimitive?.int ?: 0
 
-//                            Dlog.d(TAG, "summary: ${result.title} ${index} ${summary}")
-//                            Dlog.d(TAG, "path: ${path}")
-
                             Candidate(RouteResult(waypoint = result.title, latLng = MapLatLng(result.latitude, result.longitude), distance = distance, duration = duration, tollFare = tollFare, taxiFare = taxiFare), path)
                         } else null
                     } else {
-                        Dlog.d(TAG, "null")
                         null
                     }
                 }.sortedBy { it?.routeResult?.duration }
                     .distinct().filterNotNull()
 
+                candidates.addAll(_candidates)
                 updateUiState(item = uiState.item.copy(routesCandidates = candidates, selectedCandidates = 0, sheetType = SheetType.PREVIEW, isRouteLoading = false))
             }
 
@@ -341,7 +344,7 @@ data class TransportDetails @OptIn(ExperimentalMaterial3Api::class) constructor(
 
     val selectedCandidates: Int = -1,
     val routesInitial: SnapshotStateList<MapLatLng> = mutableStateListOf(),
-    val routesCandidates: List<Candidate> = listOf(),
+    val routesCandidates: SnapshotStateList<Candidate> = mutableStateListOf(),
     val routesFinal: SnapshotStateList<MapLatLng> = mutableStateListOf(),
 )
 

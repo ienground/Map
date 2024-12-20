@@ -39,6 +39,8 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +58,7 @@ import map.composeapp.generated.resources.set_office
 import map.composeapp.generated.resources.set_school
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import zone.ien.map.TAG
 import zone.ien.map.data.QueryResult
 import zone.ien.map.data.favorite.Favorite
 import zone.ien.map.ui.navigation.NavigationDestination
@@ -65,6 +68,7 @@ import zone.ien.map.ui.screens.home.transport.SheetType
 import zone.ien.map.ui.screens.home.transport.TransportUiState
 import zone.ien.map.ui.utils.view.AdaptiveBackButton
 import zone.ien.map.ui.utils.view.AdaptiveText
+import zone.ien.map.utils.Dlog
 import zone.ien.map.utils.LocationUtils
 import zone.ien.map.utils.MapLatLng
 import zone.ien.map.utils.diffToString
@@ -300,9 +304,9 @@ fun ProfileEditScreenBody(
                     currentLatLng = uiState.item.currentLatLng,
                     selectedLatLng = uiState.item.selectedLatLng,
                     onSelectLatLng = { onItemValueChanged(uiState.item.copy(selectedLatLng = it)) },
-                    candidates = listOf(),
+                    candidates = mutableStateListOf(),
                     selectedIndex = -1,
-                    markers = uiState.item.selectedLatLng.let { listOf(Triple(MarkerType.SELECTED, it.latitude, it.longitude)) }
+                    markers = uiState.item.selectedLatLng.let { mutableStateListOf(Triple(MarkerType.SELECTED, it.latitude, it.longitude)) }
                 )
             }
         }

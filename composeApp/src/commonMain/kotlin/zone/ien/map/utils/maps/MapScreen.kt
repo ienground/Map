@@ -1,6 +1,8 @@
 package zone.ien.map.utils.maps
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import zone.ien.map.data.Candidate
 import zone.ien.map.data.RouteResult
@@ -13,9 +15,9 @@ expect fun MapScreen(
     currentLatLng: MapLatLng,
     selectedLatLng: MapLatLng,
     onSelectLatLng: (MapLatLng) -> Unit,
-    markers: List<Triple<Int, Double, Double>> = listOf(),
-    routes: List<MapLatLng> = listOf(),
-    candidates: List<Candidate>,
+    markers: SnapshotStateList<Triple<Int, Double, Double>> = mutableStateListOf(),
+    routes: SnapshotStateList<MapLatLng> = mutableStateListOf(),
+    candidates: SnapshotStateList<Candidate>,
     selectedIndex: Int,
     onMapClick: (MapPointF, MapLatLng) -> Unit = { _, _ -> },
 )

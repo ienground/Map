@@ -16,13 +16,31 @@ interface SwiftUIFactory {
     }
 
     fun makeController(
-        currentLatLng: MapLatLng,
-        selectedLatLng: MapLatLng,
         onSelectLatLng: (MapLatLng) -> Unit,
-        markers: List<Triple<Int, Double, Double>>,
-        routes: List<MapLatLng>,
-        candidates: List<Candidate>,
-        selectedIndex: Int,
         onMapClick: (MapPointF, MapLatLng) -> Unit
     ) : UIViewController
+
+    fun updateCurrentLatLng(
+        currentLatLng: MapLatLng
+    )
+
+    fun updateSelectedLatLng(
+        selectedLatLng: MapLatLng
+    )
+
+    fun updateMarkers(
+        markers: List<Triple<Int, Double, Double>>
+    )
+
+    fun updateRoutes(
+        routes: List<MapLatLng>
+    )
+
+    fun updateCandidates(
+        candidates: List<Candidate>
+    )
+
+    fun updateSelectedIndex(
+        selectedIndex: Int
+    )
 }

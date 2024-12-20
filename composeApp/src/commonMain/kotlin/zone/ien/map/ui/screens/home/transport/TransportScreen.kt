@@ -364,6 +364,10 @@ fun TransportScreenBody(
     Box(
         modifier = modifier
     ) {
+        LaunchedEffect(uiState.item.currentLatLng) {
+            Dlog.d(TAG, "changed: ${uiState.item.currentLatLng}")
+
+        }
         MapScreen(
             currentLatLng = uiState.item.currentLatLng,
             selectedLatLng = uiState.item.selectedLatLng,
@@ -1278,14 +1282,12 @@ fun PreviewSheetContent(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) { page ->
-                        uiState.item.routesCandidates[page]?.routeResult?.let { route ->
-                            RouteCandidateRow(
-                                route = route,
-                                modifier = Modifier
-                                    .padding(horizontal = 4.dp)
-                                    .fillMaxWidth()
-                            )
-                        }
+                        RouteCandidateRow(
+                            route = uiState.item.routesCandidates[page].routeResult,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .fillMaxWidth()
+                        )
                     }
                 }
             }
@@ -1311,10 +1313,12 @@ fun RouteCandidateRow(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                AdaptiveText(
-                    text = route.waypoint,
-                    fontWeight = FontWeight.Bold
-                )
+                if (route.waypoint != "") {
+                    AdaptiveText(
+                        text = route.waypoint,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
