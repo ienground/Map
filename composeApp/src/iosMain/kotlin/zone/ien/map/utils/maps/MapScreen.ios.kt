@@ -35,7 +35,7 @@ actual fun MapScreen(
         LaunchedEffect(selectedLatLng) {
             it.updateSelectedLatLng(selectedLatLng)
         }
-        LaunchedEffect(markers) { it.updateMarkers(markers); Dlog.d(TAG, "add marker: ${markers}") }
+        LaunchedEffect(markers) { it.updateMarkers(markers) }
         LaunchedEffect(routes) { it.updateRoutes(routes) }
         LaunchedEffect(candidates) { it.updateCandidates(candidates) }
         LaunchedEffect(selectedIndex) {

@@ -104,7 +104,6 @@ class TransportViewModel(
                 updateUiState(uiState.item.copy(selectedLatLng = it))
             }
             updateUiState(uiState.item.copy(currentLatLng = it, isCurrentInitialized = true))
-            Dlog.d(TAG, "location: ${it}")
         }
     }
 
@@ -132,7 +131,6 @@ class TransportViewModel(
             }
             val result = Json.decodeFromString<JsonObject>(response.bodyAsText())["results"]?.jsonArray
             updateUiState(uiState.item.copy(currentRoadAddress = result?.toRoadAddress() ?: "", currentAddress = result?.toAddress() ?: ""))
-            Dlog.d(TAG, "getCurrentAddress: ${uiState.item.currentAddress} ${uiState.item.currentRoadAddress}")
         } catch (e: Exception) {
             Dlog.e(TAG, "error: ${e}")
         }

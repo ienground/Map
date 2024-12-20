@@ -364,10 +364,6 @@ fun TransportScreenBody(
     Box(
         modifier = modifier
     ) {
-        LaunchedEffect(uiState.item.currentLatLng) {
-            Dlog.d(TAG, "changed: ${uiState.item.currentLatLng}")
-
-        }
         MapScreen(
             currentLatLng = uiState.item.currentLatLng,
             selectedLatLng = uiState.item.selectedLatLng,
@@ -377,7 +373,6 @@ fun TransportScreenBody(
             candidates = uiState.item.routesCandidates,
             selectedIndex = uiState.item.selectedCandidates,
             onMapClick = { point, latLng ->
-                Dlog.d(TAG, "${latLng}")
                 val markers = uiState.item.markers
                 markers.find { it.first == MarkerType.SELECTED }?.let { marker -> markers.remove(marker) }
                 markers.add(Triple(MarkerType.SELECTED, latLng.latitude, latLng.longitude))
